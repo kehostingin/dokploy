@@ -76,12 +76,22 @@ export const createApplication = async (
 		});
 	}
 
+	// Default resource limits
+	const memoryReservation = 268435456 // (256 Mb in bytes)
+	const memoryLimit = 1073741824 // (1 Gb in bytes)
+	const cpuReservation = 500000000 // 0.5 CPU
+	const cpuLimit = 1000000000 // 1 CPU
+
 	return await db.transaction(async (tx) => {
 		const newApplication = await tx
 			.insert(applications)
 			.values({
 				...input,
 				appName,
+				memoryReservation,
+				memoryLimit,
+				cpuReservation,
+				cpuLimit,
 			})
 			.returning()
 			.then((value) => value[0]);
