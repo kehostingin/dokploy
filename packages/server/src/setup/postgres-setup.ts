@@ -1,6 +1,10 @@
 import type { CreateServiceOptions } from "dockerode";
 import { docker } from "../constants";
 import { pullImage } from "../utils/docker/utils";
+
+export const POSTGRES_PORT =
+	Number.parseInt(process.env.POSTGRES_PORT!, 10) || 5432;
+
 export const initializePostgres = async () => {
 	const imageName = "postgres:16";
 	const containerName = "dokploy-postgres";
@@ -37,7 +41,7 @@ export const initializePostgres = async () => {
 				Ports: [
 					{
 						TargetPort: 5432,
-						PublishedPort: 5432,
+						PublishedPort: POSTGRES_PORT,
 						Protocol: "tcp",
 						PublishMode: "host",
 					},
