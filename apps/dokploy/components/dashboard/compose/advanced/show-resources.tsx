@@ -22,6 +22,10 @@ import {
 import { Form, FormField } from "@/components/ui/form";
 import { api } from "@/utils/api";
 
+interface Props {
+	composeId: string;
+}
+
 const addResourcesSchema = z.object({
 	memoryReservation: z.string().optional(),
 	cpuLimit: z.string().optional(),
@@ -29,48 +33,15 @@ const addResourcesSchema = z.object({
 	cpuReservation: z.string().optional(),
 });
 
-export type ServiceType =
-	| "postgres"
-	| "mongo"
-	| "redis"
-	| "mysql"
-	| "mariadb"
-	| "application";
-
-interface Props {
-	id: string;
-	type: ServiceType | "application";
-}
-
 type AddResources = z.infer<typeof addResourcesSchema>;
-export const ShowResources = ({ id, type }: Props) => {
-	const queryMap = {
-		postgres: () =>
-			api.postgres.one.useQuery({ postgresId: id }, { enabled: !!id }),
-		redis: () => api.redis.one.useQuery({ redisId: id }, { enabled: !!id }),
-		mysql: () => api.mysql.one.useQuery({ mysqlId: id }, { enabled: !!id }),
-		mariadb: () =>
-			api.mariadb.one.useQuery({ mariadbId: id }, { enabled: !!id }),
-		application: () =>
-			api.application.one.useQuery({ applicationId: id }, { enabled: !!id }),
-		mongo: () => api.mongo.one.useQuery({ mongoId: id }, { enabled: !!id }),
-	};
-	const { data, refetch } = queryMap[type]
-		? queryMap[type]()
-		: api.mongo.one.useQuery({ mongoId: id }, { enabled: !!id });
 
-	const mutationMap = {
-		postgres: () => api.postgres.update.useMutation(),
-		redis: () => api.redis.update.useMutation(),
-		mysql: () => api.mysql.update.useMutation(),
-		mariadb: () => api.mariadb.update.useMutation(),
-		application: () => api.application.update.useMutation(),
-		mongo: () => api.mongo.update.useMutation(),
-	};
+export const ShowComposeResources = ({ composeId }: Props) => {
+	const { data, refetch } = api.compose.one.useQuery(
+		{ composeId },
+		{ enabled: !!composeId },
+	);
 
-	const { mutateAsync, isLoading } = mutationMap[type]
-		? mutationMap[type]()
-		: api.mongo.update.useMutation();
+	const { mutateAsync, isLoading } = api.compose.update.useMutation();
 
 	const form = useForm<AddResources>({
 		defaultValues: {
@@ -103,12 +74,7 @@ export const ShowResources = ({ id, type }: Props) => {
 
 	const onSubmit = async (formData: AddResources) => {
 		await mutateAsync({
-			mongoId: id || "",
-			postgresId: id || "",
-			redisId: id || "",
-			mysqlId: id || "",
-			mariadbId: id || "",
-			applicationId: id || "",
+			composeId,
 			cpuLimit: formData.cpuLimit
 				? coresToNanoseconds(formData.cpuLimit)
 				: null,
@@ -136,20 +102,19 @@ export const ShowResources = ({ id, type }: Props) => {
 			<CardHeader>
 				<CardTitle className="text-xl">Resources</CardTitle>
 				<CardDescription>
-					If you want to decrease or increase the resources to a specific.
-					application or database
+					Configure resource limits for this compose service
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="flex flex-col gap-4">
 				<AlertBlock type="info">
-					Please remember to click Redeploy after modify the resources to apply
-					the changes.
+					Please remember to click Redeploy after modifying the resources to
+					apply the changes.
 				</AlertBlock>
 				<Form {...form}>
 					<form
 						id="hook-form"
 						onSubmit={form.handleSubmit(onSubmit)}
-						className="grid w-full gap-8 "
+						className="grid w-full gap-8"
 					>
 						<div className="grid w-full gap-6">
 							<FormField
@@ -173,7 +138,7 @@ export const ShowResources = ({ id, type }: Props) => {
 							<FormField
 								control={form.control}
 								name="memoryLimit"
-								render={({ field}) => (
+								render={({ field }) => (
 									<ResourceSliderField
 										field={field}
 										label="Memory Limit"

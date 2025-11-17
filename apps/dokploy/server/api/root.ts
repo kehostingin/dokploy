@@ -29,6 +29,7 @@ import { projectRouter } from "./routers/project";
 import { redirectsRouter } from "./routers/redirects";
 import { redisRouter } from "./routers/redis";
 import { registryRouter } from "./routers/registry";
+import { resourceSettingsRouter } from "./routers/resource-settings";
 import { rollbackRouter } from "./routers/rollbacks";
 import { scheduleRouter } from "./routers/schedule";
 import { securityRouter } from "./routers/security";
@@ -65,6 +66,7 @@ export const appRouter = createTRPCRouter({
 	mounts: mountRouter,
 	certificates: certificateRouter,
 	settings: settingsRouter,
+	resourceSettings: resourceSettingsRouter,
 	security: securityRouter,
 	redirects: redirectsRouter,
 	port: portRouter,

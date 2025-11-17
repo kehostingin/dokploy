@@ -12,6 +12,7 @@ import { execAsyncRemote } from "@dokploy/server/utils/process/execAsync";
 import { TRPCError } from "@trpc/server";
 import { eq, getTableColumns } from "drizzle-orm";
 import { validUniqueServerAppName } from "./project";
+import { getDefaultResourceLimits } from "./resource-settings";
 
 export type Mariadb = typeof mariadb.$inferSelect;
 
@@ -26,6 +27,9 @@ export const createMariadb = async (input: typeof apiCreateMariaDB._type) => {
 		});
 	}
 
+	// Get default resource limits from global settings
+	const defaults = await getDefaultResourceLimits();
+
 	const newMariadb = await db
 		.insert(mariadb)
 		.values({
@@ -37,6 +41,10 @@ export const createMariadb = async (input: typeof apiCreateMariaDB._type) => {
 				? input.databaseRootPassword
 				: generatePassword(),
 			appName,
+			memoryReservation: defaults.memoryReservation,
+			memoryLimit: defaults.memoryLimit,
+			cpuReservation: defaults.cpuReservation,
+			cpuLimit: defaults.cpuLimit,
 		})
 		.returning()
 		.then((value) => value[0]);
