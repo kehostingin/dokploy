@@ -14,14 +14,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AlertBlock } from "@/components/shared/alert-block";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -50,7 +43,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import { api } from "@/utils/api";
 import { S3_PROVIDERS } from "./constants";
 
@@ -161,8 +153,13 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 	const [open, setOpen] = useState(false);
 	const [selectedProvider, setSelectedProvider] = useState<string>("s3");
 	const [oauthSessionId, setOauthSessionId] = useState<string>("");
-	const [oauthStatus, setOauthStatus] = useState<"idle" | "authorizing" | "authorized" | "error">("idle");
-	const [oauthUserInfo, setOauthUserInfo] = useState<{ email?: string; name?: string }>({});
+	const [oauthStatus, setOauthStatus] = useState<
+		"idle" | "authorizing" | "authorized" | "error"
+	>("idle");
+	const [oauthUserInfo, setOauthUserInfo] = useState<{
+		email?: string;
+		name?: string;
+	}>({});
 	const utils = api.useUtils();
 	const { data: isCloud } = api.settings.isCloud.useQuery();
 
@@ -182,11 +179,11 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 		{
 			enabled: !!oauthSessionId && oauthStatus === "authorizing",
 			refetchInterval: 2000, // Poll every 2 seconds
-		}
+		},
 	);
 	const getOAuthTokenData = api.oauth.getTokenData.useQuery(
 		{ sessionId: oauthSessionId },
-		{ enabled: false } // Manual trigger
+		{ enabled: false }, // Manual trigger
 	);
 	const deleteOAuthSession = api.oauth.deleteSession.useMutation();
 
@@ -245,16 +242,20 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 			const popup = window.open(
 				`${result.authUrl}&sessionId=${result.sessionId}`,
 				"OAuth Authorization",
-				`width=${width},height=${height},left=${left},top=${top}`
+				`width=${width},height=${height},left=${left},top=${top}`,
 			);
 
 			if (!popup) {
-				toast.error("Failed to open authorization popup. Please allow popups for this site.");
+				toast.error(
+					"Failed to open authorization popup. Please allow popups for this site.",
+				);
 				setOauthStatus("error");
 			}
 		} catch (error) {
 			console.error("OAuth initiation error:", error);
-			toast.error(error instanceof Error ? error.message : "Failed to start OAuth flow");
+			toast.error(
+				error instanceof Error ? error.message : "Failed to start OAuth flow",
+			);
 			setOauthStatus("error");
 		}
 	};
@@ -270,7 +271,9 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 					email: event.data.userEmail,
 					name: event.data.userName,
 				});
-				toast.success(`Authorized as ${event.data.userEmail || event.data.userName}`);
+				toast.success(
+					`Authorized as ${event.data.userEmail || event.data.userName}`,
+				);
 			} else if (event.data.type === "oauth-error") {
 				setOauthStatus("error");
 				toast.error(event.data.error);
@@ -313,12 +316,9 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 				providerType,
 				// S3 fields (legacy)
 				provider: destination.provider || rcloneData.provider || "",
-				accessKeyId:
-					destination.accessKey || rcloneData.accessKeyId || "",
+				accessKeyId: destination.accessKey || rcloneData.accessKeyId || "",
 				secretAccessKey:
-					destination.secretAccessKey ||
-					rcloneData.secretAccessKey ||
-					"",
+					destination.secretAccessKey || rcloneData.secretAccessKey || "",
 				bucket: destination.bucket || rcloneData.bucket || "",
 				region: destination.region || rcloneData.region || "",
 				endpoint: destination.endpoint || rcloneData.endpoint || "",
@@ -551,8 +551,8 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 						{destinationId ? "Update" : "Add"} Backup Destination
 					</DialogTitle>
 					<DialogDescription>
-						Configure a backup destination to store your database and application
-						backups securely.
+						Configure a backup destination to store your database and
+						application backups securely.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -590,7 +590,7 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 														<SelectItem key={key} value={key}>
 															<div className="flex items-center gap-2">
 																{icon}
-																<div className="flex flex-col">
+																<div className="flex flex-col text-left">
 																	<span>{name}</span>
 																	<span className="text-xs text-muted-foreground">
 																		{description}
@@ -616,10 +616,7 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 								<FormItem>
 									<FormLabel>Name</FormLabel>
 									<FormControl>
-										<Input
-											placeholder="My Backup Destination"
-											{...field}
-										/>
+										<Input placeholder="My Backup Destination" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -1012,7 +1009,7 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 								<FormField
 									control={form.control}
 									name="remote"
-									render={({ field}) => (
+									render={({ field }) => (
 										<FormItem>
 											<FormLabel>Base Remote</FormLabel>
 											<FormControl>
@@ -1039,7 +1036,8 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 												<Input type="password" {...field} />
 											</FormControl>
 											<FormDescription>
-												Password for encrypting files (will be obscured by rclone)
+												Password for encrypting files (will be obscured by
+												rclone)
 											</FormDescription>
 											<FormMessage />
 										</FormItem>
@@ -1192,10 +1190,7 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 															<FormItem>
 																<FormLabel>Root Folder ID (Optional)</FormLabel>
 																<FormControl>
-																	<Input
-																		placeholder="1ABC...XYZ"
-																		{...field}
-																	/>
+																	<Input placeholder="1ABC...XYZ" {...field} />
 																</FormControl>
 																<FormDescription>
 																	Limit access to a specific folder
@@ -1211,10 +1206,7 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 															<FormItem>
 																<FormLabel>Team Drive ID (Optional)</FormLabel>
 																<FormControl>
-																	<Input
-																		placeholder="0ABC...XYZ"
-																		{...field}
-																	/>
+																	<Input placeholder="0ABC...XYZ" {...field} />
 																</FormControl>
 																<FormDescription>
 																	Use a Google Workspace Team Drive
@@ -1235,10 +1227,7 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 															<FormItem>
 																<FormLabel>Drive ID (Optional)</FormLabel>
 																<FormControl>
-																	<Input
-																		placeholder="b!abc..."
-																		{...field}
-																	/>
+																	<Input placeholder="b!abc..." {...field} />
 																</FormControl>
 																<FormDescription>
 																	Specify a particular drive
@@ -1262,8 +1251,12 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 																			<SelectValue placeholder="Select drive type" />
 																		</SelectTrigger>
 																		<SelectContent>
-																			<SelectItem value="personal">Personal</SelectItem>
-																			<SelectItem value="business">Business</SelectItem>
+																			<SelectItem value="personal">
+																				Personal
+																			</SelectItem>
+																			<SelectItem value="business">
+																				Business
+																			</SelectItem>
 																			<SelectItem value="documentLibrary">
 																				Document Library
 																			</SelectItem>
@@ -1319,11 +1312,7 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 				</Form>
 
 				<DialogFooter>
-					<Button
-						type="submit"
-						form="destination-form"
-						isLoading={isLoading}
-					>
+					<Button type="submit" form="destination-form" isLoading={isLoading}>
 						{destinationId ? "Update" : "Create"} Destination
 					</Button>
 				</DialogFooter>
