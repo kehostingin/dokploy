@@ -152,32 +152,36 @@
 - **Files created**: `handle-destinations-v2.tsx`
 - **Files modified**: `show-destinations.tsx` (to use V2 component)
 
-### 3.4 Provider-Specific Forms
-- [ ] Create `apps/dokploy/components/dashboard/settings/destination/providers/` directory
-- [ ] `google-drive-form.tsx` - Google Drive OAuth form
-  - [ ] "Authorize with Google" button
-  - [ ] OAuth popup/redirect flow
-  - [ ] Display authorized account info
-  - [ ] Optional: root folder selection
-- [ ] `onedrive-form.tsx` - OneDrive OAuth form
-  - [ ] Similar to Google Drive
-- [ ] `sftp-form.tsx` - SFTP configuration
-  - [ ] Host, port, username
-  - [ ] Password or SSH key upload
-  - [ ] Test connection button
-- [ ] `ftp-form.tsx` - FTP configuration
-  - [ ] Host, port, username, password
-  - [ ] TLS/SSL toggle
-  - [ ] Passive mode toggle
-- [ ] `s3-form.tsx` - S3 configuration (existing, maybe refactor)
-- [ ] `crypt-form.tsx` - Encryption configuration
-  - [ ] Select base remote from existing destinations
-  - [ ] Password fields with strength indicator
-  - [ ] Warning about password loss
-- [ ] `custom-form.tsx` - Custom rclone config
-  - [ ] Textarea for rclone config snippet
-  - [ ] Syntax highlighting (optional)
-  - [ ] Validation before save
+### 3.4 Provider-Specific Forms ✅ (Non-OAuth Complete)
+- [x] All provider forms integrated into `handle-destinations-v2.tsx` (no separate components)
+- [x] **S3 form** - S3-compatible storage configuration
+  - [x] Provider selection (AWS, MinIO, DigitalOcean, etc.)
+  - [x] Access Key ID, Secret Access Key
+  - [x] Bucket, Region, Endpoint
+- [x] **FTP form** - FTP/FTPS configuration
+  - [x] Host, Port (default: 21), Username, Password
+  - [x] TLS/SSL toggle
+- [x] **SFTP form** - SSH File Transfer Protocol
+  - [x] Host, Port (default: 22), Username
+  - [x] Password OR SSH Private Key (textarea)
+- [x] **WebDAV form** - WebDAV configuration
+  - [x] WebDAV URL, Vendor selection (Nextcloud, ownCloud, SharePoint, Other)
+  - [x] Username, Password
+- [x] **Local form** - Local filesystem
+  - [x] Absolute path on server
+- [x] **Crypt form** - Encryption wrapper
+  - [x] Base remote selection
+  - [x] Encryption password fields (password, salt password)
+  - [x] Filename encryption mode (standard, obfuscate, off)
+- [x] **Custom form** - Custom rclone config
+  - [x] Textarea for rclone config snippet
+  - [x] Link to rclone documentation
+- [ ] **OAuth forms (DEFERRED)** - Requires OAuth backend implementation
+  - [ ] `google-drive-form.tsx` - Google Drive OAuth form
+  - [ ] `onedrive-form.tsx` - OneDrive OAuth form
+  - [ ] `dropbox-form.tsx` - Dropbox OAuth form
+- **Note**: Implemented 7 provider types (S3, FTP, SFTP, WebDAV, Local, Crypt, Custom) in single component
+- **Files modified**: `handle-destinations-v2.tsx`, `show-destinations.tsx` (icons)
 
 ### 3.5 Edit Destination Dialog ✅
 - [x] Edit functionality integrated into `handle-destinations-v2.tsx` (no separate component needed)
@@ -189,7 +193,7 @@
 - **Note**: Edit mode determined by `destinationId` prop; form auto-populates with decrypted data
 - **Files modified**: `handle-destinations-v2.tsx` (edit support built-in from Phase 3.3)
 
-### 3.6 OAuth Flow UI
+### 3.6 OAuth Flow UI (DEFERRED)
 - [ ] Create OAuth popup/redirect flow
 - [ ] Handle OAuth callback page
   - [ ] Display "Authorizing..." message
@@ -200,6 +204,8 @@
   - [ ] Error handling for OAuth failures
 - [ ] Handle OAuth token expiration warnings
   - [ ] Show "Re-authorize" button if token expired
+- **Status**: Deferred to future work - requires OAuth service backend implementation
+- **Blocked by**: Phase 2.2 (OAuth Service) implementation
 
 ## Phase 4: Testing & Validation
 

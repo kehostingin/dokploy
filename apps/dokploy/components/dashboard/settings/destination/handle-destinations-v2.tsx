@@ -70,6 +70,16 @@ const destinationSchema = z.object({
 	pass: z.string().optional(),
 	keyPem: z.string().optional(),
 	tls: z.boolean().optional(),
+	// WebDAV fields
+	url: z.string().optional(),
+	vendor: z.string().optional(),
+	// Local fields
+	path: z.string().optional(),
+	// Crypt fields
+	remote: z.string().optional(),
+	password: z.string().optional(),
+	password2: z.string().optional(),
+	filenameEncryption: z.string().optional(),
 	// Custom config
 	customConfig: z.string().optional(),
 	serverId: z.string().optional(),
@@ -100,6 +110,21 @@ const PROVIDER_INFO: Record<
 		icon: <ServerIcon className="size-4" />,
 		name: "SFTP",
 		description: "SSH File Transfer Protocol",
+	},
+	webdav: {
+		icon: <ServerIcon className="size-4" />,
+		name: "WebDAV",
+		description: "Nextcloud, ownCloud, Sharepoint WebDAV",
+	},
+	local: {
+		icon: <HardDrive className="size-4" />,
+		name: "Local Filesystem",
+		description: "Local directory on the server",
+	},
+	crypt: {
+		icon: <FileCode className="size-4" />,
+		name: "Encrypted Remote",
+		description: "Encrypt files on top of another remote",
 	},
 	custom: {
 		icon: <FileCode className="size-4" />,
@@ -139,6 +164,13 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 			pass: "",
 			keyPem: "",
 			tls: false,
+			url: "",
+			vendor: "",
+			path: "",
+			remote: "",
+			password: "",
+			password2: "",
+			filenameEncryption: "standard",
 			customConfig: "",
 			serverId: "",
 		},
@@ -182,6 +214,16 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 				pass: rcloneData.pass || "",
 				keyPem: rcloneData.keyPem || "",
 				tls: rcloneData.tls || false,
+				// WebDAV fields
+				url: rcloneData.url || "",
+				vendor: rcloneData.vendor || "",
+				// Local fields
+				path: rcloneData.path || "",
+				// Crypt fields
+				remote: rcloneData.remote || "",
+				password: rcloneData.password || "",
+				password2: rcloneData.password2 || "",
+				filenameEncryption: rcloneData.filenameEncryption || "standard",
 				// Custom config
 				customConfig: destination.customConfig || "",
 			});
@@ -234,6 +276,42 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 				await mutateAsync({
 					name: data.name,
 					providerType: "sftp",
+					rcloneConfig: JSON.stringify(rcloneConfig),
+					destinationId: destinationId || "",
+				});
+			} else if (data.providerType === "webdav") {
+				rcloneConfig = {
+					url: data.url,
+					vendor: data.vendor,
+					user: data.user,
+					pass: data.pass,
+				};
+				await mutateAsync({
+					name: data.name,
+					providerType: "webdav",
+					rcloneConfig: JSON.stringify(rcloneConfig),
+					destinationId: destinationId || "",
+				});
+			} else if (data.providerType === "local") {
+				rcloneConfig = {
+					path: data.path,
+				};
+				await mutateAsync({
+					name: data.name,
+					providerType: "local",
+					rcloneConfig: JSON.stringify(rcloneConfig),
+					destinationId: destinationId || "",
+				});
+			} else if (data.providerType === "crypt") {
+				rcloneConfig = {
+					remote: data.remote,
+					password: data.password,
+					password2: data.password2,
+					filenameEncryption: data.filenameEncryption,
+				};
+				await mutateAsync({
+					name: data.name,
+					providerType: "crypt",
 					rcloneConfig: JSON.stringify(rcloneConfig),
 					destinationId: destinationId || "",
 				});
@@ -636,6 +714,193 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 											</FormControl>
 											<FormDescription>
 												Paste your SSH private key here
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</>
+						)}
+
+						{/* WebDAV Fields */}
+						{selectedProvider === "webdav" && (
+							<>
+								<FormField
+									control={form.control}
+									name="url"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>WebDAV URL</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="https://cloud.example.com/remote.php/dav"
+													{...field}
+												/>
+											</FormControl>
+											<FormDescription>
+												Full WebDAV endpoint URL
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="vendor"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Vendor (Optional)</FormLabel>
+											<FormControl>
+												<Select
+													onValueChange={field.onChange}
+													value={field.value}
+												>
+													<SelectTrigger>
+														<SelectValue placeholder="Select vendor" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="nextcloud">Nextcloud</SelectItem>
+														<SelectItem value="owncloud">ownCloud</SelectItem>
+														<SelectItem value="sharepoint">
+															SharePoint
+														</SelectItem>
+														<SelectItem value="other">Other</SelectItem>
+													</SelectContent>
+												</Select>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="user"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Username</FormLabel>
+											<FormControl>
+												<Input placeholder="username" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="pass"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Password</FormLabel>
+											<FormControl>
+												<Input type="password" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</>
+						)}
+
+						{/* Local Fields */}
+						{selectedProvider === "local" && (
+							<FormField
+								control={form.control}
+								name="path"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Local Path</FormLabel>
+										<FormControl>
+											<Input placeholder="/path/to/backups" {...field} />
+										</FormControl>
+										<FormDescription>
+											Absolute path on the server's filesystem
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						)}
+
+						{/* Crypt Fields */}
+						{selectedProvider === "crypt" && (
+							<>
+								<FormField
+									control={form.control}
+									name="remote"
+									render={({ field}) => (
+										<FormItem>
+											<FormLabel>Base Remote</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="my-s3-remote:bucket/path"
+													{...field}
+												/>
+											</FormControl>
+											<FormDescription>
+												The remote to encrypt (e.g., "my-s3:bucket" or
+												"my-sftp:/backups")
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="password"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Encryption Password</FormLabel>
+											<FormControl>
+												<Input type="password" {...field} />
+											</FormControl>
+											<FormDescription>
+												Password for encrypting files (will be obscured by rclone)
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="password2"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Salt Password (Optional)</FormLabel>
+											<FormControl>
+												<Input type="password" {...field} />
+											</FormControl>
+											<FormDescription>
+												Additional salt for extra security
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="filenameEncryption"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Filename Encryption</FormLabel>
+											<FormControl>
+												<Select
+													onValueChange={field.onChange}
+													value={field.value}
+												>
+													<SelectTrigger>
+														<SelectValue placeholder="Select encryption mode" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="standard">
+															Standard (recommended)
+														</SelectItem>
+														<SelectItem value="obfuscate">Obfuscate</SelectItem>
+														<SelectItem value="off">Off</SelectItem>
+													</SelectContent>
+												</Select>
+											</FormControl>
+											<FormDescription>
+												How to encrypt filenames
 											</FormDescription>
 											<FormMessage />
 										</FormItem>
