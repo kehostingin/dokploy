@@ -23,11 +23,10 @@ export const ShowDestinations = () => {
 					<CardHeader className="">
 						<CardTitle className="text-xl flex flex-row gap-2">
 							<Database className="size-6 text-muted-foreground self-center" />
-							S3 Destinations
+							Backup Destinations
 						</CardTitle>
 						<CardDescription>
-							Add your providers like AWS S3, Cloudflare R2, Wasabi,
-							DigitalOcean Spaces etc.
+							Configure backup destinations including S3-compatible storage, Google Drive, OneDrive, FTP, SFTP, and more.
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-2 py-8 border-t">

@@ -8,7 +8,11 @@ import { findEnvironmentById } from "@dokploy/server/services/environment";
 import { findProjectById } from "@dokploy/server/services/project";
 import { sendDatabaseBackupNotifications } from "../notifications/database-backup";
 import { execAsync, execAsyncRemote } from "../process/execAsync";
-import { getBackupCommand, getS3Credentials, normalizeS3Path } from "./utils";
+import {
+	getBackupCommand,
+	getRcloneUploadCommand,
+	normalizeS3Path,
+} from "./utils";
 
 export const runMariadbBackup = async (
 	mariadb: Mariadb,
@@ -27,9 +31,11 @@ export const runMariadbBackup = async (
 		description: "MariaDB Backup",
 	});
 	try {
-		const rcloneFlags = getS3Credentials(destination);
-		const rcloneDestination = `:s3:${destination.bucket}/${bucketDestination}`;
-		const rcloneCommand = `rclone rcat ${rcloneFlags.join(" ")} "${rcloneDestination}"`;
+		// Get rclone command for multi-provider support
+		const rcloneCommand = await getRcloneUploadCommand(
+			destination,
+			bucketDestination,
+		);
 
 		const backupCommand = getBackupCommand(
 			backup,

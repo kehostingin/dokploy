@@ -1,6 +1,13 @@
 import { logger } from "@dokploy/server/lib/logger";
 import type { BackupSchedule } from "@dokploy/server/services/backup";
-import type { Destination } from "@dokploy/server/services/destination";
+import {
+	type Destination,
+	decryptDestinationConfig,
+} from "@dokploy/server/services/destination";
+import {
+	createTempRcloneConfig,
+	generateRcloneConfig,
+} from "@dokploy/server/services/rclone";
 import { scheduledJobs, scheduleJob } from "node-schedule";
 import { keepLatestNBackups } from ".";
 import { runComposeBackup } from "./compose";
@@ -75,6 +82,66 @@ export const getS3Credentials = (destination: Destination) => {
 	}
 
 	return rcloneFlags;
+};
+
+/**
+ * Build rclone command for uploading to a destination
+ * Supports both legacy S3 (with flags) and rclone-based providers (with config)
+ */
+export const getRcloneUploadCommand = async (
+	destination: Destination,
+	bucketDestination: string,
+): Promise<string> => {
+	// Decrypt config if needed
+	const decryptedDest = decryptDestinationConfig(destination);
+
+	// Legacy S3 with inline credentials
+	if (
+		decryptedDest.providerType === "s3" &&
+		!decryptedDest.rcloneConfig &&
+		decryptedDest.accessKey &&
+		decryptedDest.bucket
+	) {
+		const rcloneFlags = getS3Credentials(decryptedDest);
+		const rcloneDestination = `:s3:${decryptedDest.bucket}/${bucketDestination}`;
+		return `rclone rcat ${rcloneFlags.join(" ")} "${rcloneDestination}"`;
+	}
+
+	// rclone-based providers with config file
+	if (!decryptedDest.rcloneConfig && !decryptedDest.customConfig) {
+		throw new Error(
+			"No configuration found for this destination. Please reconfigure the destination.",
+		);
+	}
+
+	// Parse rclone config
+	let config: Record<string, unknown> = {};
+	if (decryptedDest.rcloneConfig) {
+		try {
+			config = JSON.parse(decryptedDest.rcloneConfig);
+		} catch (error) {
+			throw new Error("Invalid rclone configuration format");
+		}
+	}
+
+	// Generate rclone config file
+	const remoteName = `backup-${decryptedDest.destinationId}`;
+	const rcloneConfigContent =
+		decryptedDest.customConfig ||
+		generateRcloneConfig({
+			remoteName,
+			providerType: decryptedDest.providerType as any,
+			config,
+		});
+
+	// Create temporary config file
+	const configPath = await createTempRcloneConfig(rcloneConfigContent);
+
+	// For rclone-based providers, we need to specify the bucket in the config if applicable
+	// For non-S3 providers, bucketDestination is just the file path
+	const rcloneDestination = `${remoteName}:${bucketDestination}`;
+
+	return `rclone rcat --config "${configPath}" "${rcloneDestination}"`;
 };
 
 export const getPostgresBackupCommand = (
