@@ -7,10 +7,10 @@ import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { decrypt, encrypt, isEncryptionConfigured } from "../utils/encryption";
 import {
-	PROVIDERS,
 	createTempRcloneConfig,
 	generateRcloneConfig,
 	getProvider,
+	PROVIDERS,
 	rcloneTest,
 } from "./rclone";
 
@@ -198,14 +198,17 @@ export const testDestinationConnection = async (
 			.update(destinations)
 			.set({
 				lastTestedAt: new Date(),
-				lastError: result.success ? null : result.stderr || result.error?.message,
+				lastError: result.success
+					? null
+					: result.stderr || result.error?.message,
 			})
 			.where(eq(destinations.destinationId, destinationId));
 
 		if (!result.success) {
 			return {
 				success: false,
-				error: result.stderr || result.error?.message || "Connection test failed",
+				error:
+					result.stderr || result.error?.message || "Connection test failed",
 			};
 		}
 
