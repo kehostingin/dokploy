@@ -38,9 +38,16 @@ export const destinationRouter = createTRPCRouter({
 					ctx.session.activeOrganizationId,
 				);
 			} catch (error) {
+				// Pass through TRPCError as-is for better error messages
+				if (error instanceof TRPCError) {
+					throw error;
+				}
 				throw new TRPCError({
 					code: "BAD_REQUEST",
-					message: "Error creating the destination",
+					message:
+						error instanceof Error
+							? error.message
+							: "Error creating the destination",
 					cause: error,
 				});
 			}
