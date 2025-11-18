@@ -1,7 +1,7 @@
 import { api } from "@/utils/api";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type OAuthStatus = "processing" | "success" | "error";
 
@@ -13,6 +13,7 @@ const OAuthCallbackPage = () => {
 		email?: string;
 		name?: string;
 	}>({});
+	const hasRun = useRef(false);
 
 	const oauthCallback = api.oauth.callback.useMutation();
 
@@ -21,9 +22,27 @@ const OAuthCallbackPage = () => {
 			const { code, state, sessionId } = router.query;
 
 			// Wait for router to be ready
-			if (!router.isReady || !code || !state || !sessionId) {
+			if (!router.isReady) {
+				console.log("Router not ready yet");
 				return;
 			}
+
+			// Check for required parameters
+			if (!code || !state || !sessionId) {
+				console.log("Missing query parameters:", { code: !!code, state: !!state, sessionId: !!sessionId });
+				setStatus("error");
+				setErrorMessage("Missing required OAuth parameters. Please try again.");
+				return;
+			}
+
+			// Prevent running multiple times
+			if (hasRun.current) {
+				console.log("Callback already processed, skipping");
+				return;
+			}
+			hasRun.current = true;
+
+			console.log("Processing OAuth callback with sessionId:", sessionId);
 
 			try {
 				const result = await oauthCallback.mutateAsync({
@@ -31,6 +50,8 @@ const OAuthCallbackPage = () => {
 					state: state as string,
 					sessionId: sessionId as string,
 				});
+
+				console.log("OAuth callback successful:", result);
 
 				setUserInfo({
 					email: result.userEmail,
@@ -62,12 +83,23 @@ const OAuthCallbackPage = () => {
 				}
 			} catch (error) {
 				console.error("OAuth callback error:", error);
+				console.error("Error details:", JSON.stringify(error, null, 2));
 				setStatus("error");
-				setErrorMessage(
-					error instanceof Error
-						? error.message
-						: "Failed to complete OAuth authorization",
-				);
+
+				// Extract error message from tRPC error
+				let message = "Failed to complete OAuth authorization";
+				if (error && typeof error === "object") {
+					const err = error as any;
+					if (err.message) {
+						message = err.message;
+					} else if (err.data?.message) {
+						message = err.data.message;
+					} else if (err.shape?.message) {
+						message = err.shape.message;
+					}
+				}
+
+				setErrorMessage(message);
 
 				// Notify parent window of error
 				if (window.opener) {
@@ -130,6 +162,14 @@ const OAuthCallbackPage = () => {
 						<XCircle className="size-12 text-destructive" />
 						<h1 className="text-2xl font-bold">Authorization Failed</h1>
 						<p className="text-center text-muted-foreground">{errorMessage}</p>
+						{process.env.NODE_ENV === "development" && (
+							<div className="mt-4 p-3 bg-muted rounded-md text-xs font-mono max-w-full overflow-auto">
+								<div>Query params:</div>
+								<div>code: {router.query.code ? "present" : "missing"}</div>
+								<div>state: {router.query.state ? "present" : "missing"}</div>
+								<div>sessionId: {router.query.sessionId as string || "missing"}</div>
+							</div>
+						)}
 						{!window.opener && (
 							<button
 								type="button"
