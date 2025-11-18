@@ -60,6 +60,7 @@ import {
 	updatePreviewDeployment,
 } from "./preview-deployment";
 import { validUniqueServerAppName } from "./project";
+import { getDefaultResourceLimits } from "./resource-settings";
 import { createRollback } from "./rollbacks";
 export type Application = typeof applications.$inferSelect;
 
@@ -77,11 +78,8 @@ export const createApplication = async (
 		});
 	}
 
-	// Default resource limits
-	const memoryReservation = "268435456"; // 256 MB in bytes
-	const memoryLimit = "1073741824"; // 1 GB in bytes
-	const cpuReservation = "500000000"; // 0.5 CPU
-	const cpuLimit = "1000000000"; // 1 CPU
+	// Get default resource limits from global settings (with fallback to hardcoded defaults)
+	const defaults = await getDefaultResourceLimits();
 
 	return await db.transaction(async (tx) => {
 		const newApplication = await tx
@@ -89,10 +87,10 @@ export const createApplication = async (
 			.values({
 				...restInput,
 				appName,
-				memoryReservation,
-				memoryLimit,
-				cpuReservation,
-				cpuLimit,
+				memoryReservation: defaults.memoryReservation,
+				memoryLimit: defaults.memoryLimit,
+				cpuReservation: defaults.cpuReservation,
+				cpuLimit: defaults.cpuLimit,
 			})
 			.returning()
 			.then((value) => value[0]);

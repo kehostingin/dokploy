@@ -11,6 +11,7 @@ import { execAsyncRemote } from "@dokploy/server/utils/process/execAsync";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { validUniqueServerAppName } from "./project";
+import { getDefaultResourceLimits } from "./resource-settings";
 
 export type Redis = typeof redis.$inferSelect;
 
@@ -26,6 +27,9 @@ export const createRedis = async (input: typeof apiCreateRedis._type) => {
 		});
 	}
 
+	// Get default resource limits from global settings
+	const defaults = await getDefaultResourceLimits();
+
 	const newRedis = await db
 		.insert(redis)
 		.values({
@@ -34,6 +38,10 @@ export const createRedis = async (input: typeof apiCreateRedis._type) => {
 				? input.databasePassword
 				: generatePassword(),
 			appName,
+			memoryReservation: defaults.memoryReservation,
+			memoryLimit: defaults.memoryLimit,
+			cpuReservation: defaults.cpuReservation,
+			cpuLimit: defaults.cpuLimit,
 		})
 		.returning()
 		.then((value) => value[0]);

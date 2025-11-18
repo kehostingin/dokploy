@@ -55,6 +55,7 @@ import { encodeBase64 } from "../utils/docker/utils";
 import { getDokployUrl } from "./admin";
 import { createDeploymentCompose, updateDeploymentStatus } from "./deployment";
 import { validUniqueServerAppName } from "./project";
+import { getDefaultResourceLimits } from "./resource-settings";
 
 export type Compose = typeof compose.$inferSelect;
 
@@ -69,12 +70,19 @@ export const createCompose = async (input: typeof apiCreateCompose._type) => {
 		});
 	}
 
+	// Get default resource limits from global settings
+	const defaults = await getDefaultResourceLimits();
+
 	const newDestination = await db
 		.insert(compose)
 		.values({
 			...input,
 			composeFile: input.composeFile || "",
 			appName,
+			memoryReservation: defaults.memoryReservation,
+			memoryLimit: defaults.memoryLimit,
+			cpuReservation: defaults.cpuReservation,
+			cpuLimit: defaults.cpuLimit,
 		})
 		.returning()
 		.then((value) => value[0]);
@@ -103,11 +111,19 @@ export const createComposeByTemplate = async (
 			});
 		}
 	}
+
+	// Get default resource limits from global settings
+	const defaults = await getDefaultResourceLimits();
+
 	const newDestination = await db
 		.insert(compose)
 		.values({
 			...input,
 			appName,
+			memoryReservation: defaults.memoryReservation,
+			memoryLimit: defaults.memoryLimit,
+			cpuReservation: defaults.cpuReservation,
+			cpuLimit: defaults.cpuLimit,
 		})
 		.returning()
 		.then((value) => value[0]);

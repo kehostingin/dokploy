@@ -12,6 +12,7 @@ import { execAsyncRemote } from "@dokploy/server/utils/process/execAsync";
 import { TRPCError } from "@trpc/server";
 import { eq, getTableColumns } from "drizzle-orm";
 import { validUniqueServerAppName } from "./project";
+import { getDefaultResourceLimits } from "./resource-settings";
 
 export type Postgres = typeof postgres.$inferSelect;
 
@@ -26,6 +27,9 @@ export const createPostgres = async (input: typeof apiCreatePostgres._type) => {
 		});
 	}
 
+	// Get default resource limits from global settings (with fallback to hardcoded defaults)
+	const defaults = await getDefaultResourceLimits();
+
 	const newPostgres = await db
 		.insert(postgres)
 		.values({
@@ -34,6 +38,10 @@ export const createPostgres = async (input: typeof apiCreatePostgres._type) => {
 				? input.databasePassword
 				: generatePassword(),
 			appName,
+			memoryReservation: defaults.memoryReservation,
+			memoryLimit: defaults.memoryLimit,
+			cpuReservation: defaults.cpuReservation,
+			cpuLimit: defaults.cpuLimit,
 		})
 		.returning()
 		.then((value) => value[0]);

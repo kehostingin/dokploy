@@ -17,6 +17,7 @@ import {
 	Folder,
 	Forward,
 	GalleryVerticalEnd,
+	Gauge,
 	GitBranch,
 	HeartIcon,
 	KeyRound,
@@ -264,6 +265,14 @@ const MENU: Menu = {
 			icon: Activity,
 			// Only enabled for admins in non-cloud environments
 			isEnabled: ({ auth, isCloud }) => !!(auth?.role === "owner" && !isCloud),
+		},
+		{
+			isSingle: true,
+			title: "Resource Limits",
+			url: "/dashboard/settings/resources",
+			icon: Gauge,
+			// Only enabled for admins
+			isEnabled: ({ auth }) => !!(auth?.role === "owner"),
 		},
 		{
 			isSingle: true,

@@ -30,6 +30,7 @@ export * from "./schedule";
 export * from "./security";
 export * from "./server";
 export * from "./session";
+export * from "./settings";
 export * from "./shared";
 export * from "./ssh-key";
 export * from "./user";
