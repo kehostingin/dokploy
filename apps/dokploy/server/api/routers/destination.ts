@@ -47,15 +47,24 @@ export const destinationRouter = createTRPCRouter({
 		}),
 	testConnection: adminProcedure
 		.input(
-			z.union([
-				apiCreateDestination, // For testing before creation
-				z.object({ destinationId: z.string() }), // For testing existing
-			]),
+			z.object({
+				destinationId: z.string().optional(),
+				// Legacy S3 fields for pre-creation testing
+				name: z.string().optional(),
+				providerType: z.string().optional(),
+				provider: z.string().optional(),
+				accessKey: z.string().optional(),
+				secretAccessKey: z.string().optional(),
+				bucket: z.string().optional(),
+				region: z.string().optional(),
+				endpoint: z.string().optional(),
+				serverId: z.string().optional(),
+			}),
 		)
 		.mutation(async ({ input }) => {
 			try {
 				// If testing existing destination
-				if ("destinationId" in input) {
+				if (input.destinationId) {
 					const result = await testDestinationConnection(input.destinationId);
 					if (!result.success) {
 						throw new TRPCError({
