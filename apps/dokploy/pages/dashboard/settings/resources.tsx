@@ -24,9 +24,7 @@ Page.getLayout = (page: ReactElement) => {
 	return <DashboardLayout metaName="Resource Limits">{page}</DashboardLayout>;
 };
 
-export async function getServerSideProps(
-	ctx: GetServerSidePropsContext,
-) {
+export async function getServerSideProps(ctx: GetServerSidePropsContext) {
 	const { req, res } = ctx;
 	const locale = getLocale(req.cookies);
 	const { user, session } = await validateRequest(req);

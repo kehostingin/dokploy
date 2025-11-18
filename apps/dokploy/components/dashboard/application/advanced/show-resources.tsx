@@ -173,7 +173,7 @@ export const ShowResources = ({ id, type }: Props) => {
 							<FormField
 								control={form.control}
 								name="memoryLimit"
-								render={({ field}) => (
+								render={({ field }) => (
 									<ResourceSliderField
 										field={field}
 										label="Memory Limit"

@@ -37,53 +37,51 @@ export const apiGetSettings = createSchema
 	})
 	.optional();
 
-export const apiUpdateSettings = createSchema
-	.partial()
-	.extend({
-		globalMemoryReservation: z
-			.string()
-			.refine(
-				(val) => {
-					if (!val) return true;
-					const num = Number.parseFloat(val);
-					return num >= 64 && num <= 8192;
-				},
-				{ message: "Memory reservation must be between 64 MB and 8192 MB" },
-			)
-			.optional(),
-		globalMemoryLimit: z
-			.string()
-			.refine(
-				(val) => {
-					if (!val) return true;
-					const num = Number.parseFloat(val);
-					return num >= 128 && num <= 16384;
-				},
-				{ message: "Memory limit must be between 128 MB and 16384 MB" },
-			)
-			.optional(),
-		globalCpuReservation: z
-			.string()
-			.refine(
-				(val) => {
-					if (!val) return true;
-					const num = Number.parseFloat(val);
-					return num >= 0.1 && num <= 4.0;
-				},
-				{ message: "CPU reservation must be between 0.1 and 4.0 cores" },
-			)
-			.optional(),
-		globalCpuLimit: z
-			.string()
-			.refine(
-				(val) => {
-					if (!val) return true;
-					const num = Number.parseFloat(val);
-					return num >= 0.25 && num <= 8.0;
-				},
-				{ message: "CPU limit must be between 0.25 and 8.0 cores" },
-			)
-			.optional(),
-	});
+export const apiUpdateSettings = createSchema.partial().extend({
+	globalMemoryReservation: z
+		.string()
+		.refine(
+			(val) => {
+				if (!val) return true;
+				const num = Number.parseFloat(val);
+				return num >= 64 && num <= 8192;
+			},
+			{ message: "Memory reservation must be between 64 MB and 8192 MB" },
+		)
+		.optional(),
+	globalMemoryLimit: z
+		.string()
+		.refine(
+			(val) => {
+				if (!val) return true;
+				const num = Number.parseFloat(val);
+				return num >= 128 && num <= 16384;
+			},
+			{ message: "Memory limit must be between 128 MB and 16384 MB" },
+		)
+		.optional(),
+	globalCpuReservation: z
+		.string()
+		.refine(
+			(val) => {
+				if (!val) return true;
+				const num = Number.parseFloat(val);
+				return num >= 0.1 && num <= 4.0;
+			},
+			{ message: "CPU reservation must be between 0.1 and 4.0 cores" },
+		)
+		.optional(),
+	globalCpuLimit: z
+		.string()
+		.refine(
+			(val) => {
+				if (!val) return true;
+				const num = Number.parseFloat(val);
+				return num >= 0.25 && num <= 8.0;
+			},
+			{ message: "CPU limit must be between 0.25 and 8.0 cores" },
+		)
+		.optional(),
+});
 
 export type Settings = typeof settings.$inferSelect;

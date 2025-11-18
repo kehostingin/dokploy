@@ -86,9 +86,7 @@ describe("Resource Conversion Utilities", () => {
 			expect(() => coresToNanoseconds("invalid")).toThrow(
 				"Invalid CPU cores value",
 			);
-			expect(() => coresToNanoseconds("-1")).toThrow(
-				"Invalid CPU cores value",
-			);
+			expect(() => coresToNanoseconds("-1")).toThrow("Invalid CPU cores value");
 		});
 	});
 
