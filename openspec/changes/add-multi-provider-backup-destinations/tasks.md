@@ -280,13 +280,35 @@
   - [x] SSH private key format
   - [x] Error handling for invalid ciphertext
   - [x] Security properties (authenticated encryption, tamper detection)
-- [ ] Test OAuth session management (deferred with OAuth implementation)
-- [ ] Test destination CRUD operations (integration tests)
-- [ ] Test backup upload routing logic (integration tests)
+- [x] Test OAuth session management
+  - [x] Session creation and uniqueness
+  - [x] Session retrieval by ID and state
+  - [x] Session expiration and cleanup
+  - [x] Session updates with token data
+  - [x] CSRF protection via state validation
+  - [x] Session deletion
+- [x] Test destination CRUD operations (integration tests)
+  - [x] Provider metadata retrieval
+  - [x] Config encryption/decryption
+  - [x] Provider configuration validation for all 10 types
+  - [x] Multi-provider support verification
+  - [x] OAuth vs non-OAuth categorization
+- [x] Test OAuth router integration
+  - [x] OAuth initiate flow for all 3 providers
+  - [x] OAuth callback flow and state validation
+  - [x] Session status polling
+  - [x] Token data retrieval for rclone
+  - [x] Session cleanup
+  - [x] Configuration status checking
+  - [x] Error handling (expired sessions, invalid state, not found)
+- [ ] Test backup upload routing logic (deferred - requires full integration environment)
 - **Files created**:
   - `apps/dokploy/__test__/services/rclone/rclone-config.test.ts` (60 tests)
   - `apps/dokploy/__test__/services/rclone/rclone-providers.test.ts` (25 tests)
   - `apps/dokploy/__test__/utils/encryption.test.ts` (30+ tests)
+  - `apps/dokploy/__test__/services/oauth/oauth-session.test.ts` (35+ tests)
+  - `apps/dokploy/__test__/services/destination/destination-crud.test.ts` (25+ tests)
+  - `apps/dokploy/__test__/api/routers/oauth-router.test.ts` (30+ tests)
 
 ### 4.2 Integration Tests
 - [ ] Test actual rclone commands against test backends
