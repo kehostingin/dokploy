@@ -65,13 +65,31 @@
 - [x] Add `getAllProviders` and `getProviderById` functions
 - **Files modified**: `packages/server/src/services/destination.ts`
 
-### 2.2 OAuth Service (DEFERRED)
-- [ ] Create `packages/server/src/services/oauth/` directory
-- [ ] Implement `oauth-session.ts` - Session management
-- [ ] Implement `oauth-google-drive.ts` - Google Drive OAuth
-- [ ] Implement `oauth-onedrive.ts` - OneDrive OAuth
-- [ ] Implement `oauth-dropbox.ts` - Dropbox OAuth (optional)
-- **Note**: OAuth is deferred to future work. Non-OAuth providers (S3, FTP, SFTP) work immediately.
+### 2.2 OAuth Service ✅
+- [x] Create `packages/server/src/services/oauth/` directory
+- [x] Implement `oauth-session.ts` - Session management
+  - [x] In-memory session storage with TTL (10 minutes)
+  - [x] CSRF protection with state parameter
+  - [x] Session cleanup and expiration handling
+- [x] Implement `oauth-google-drive.ts` - Google Drive OAuth
+  - [x] Authorization URL generation
+  - [x] Code exchange for access/refresh tokens
+  - [x] Token refresh logic
+  - [x] User info retrieval
+  - [x] Configuration check
+- [x] Implement `oauth-onedrive.ts` - OneDrive OAuth
+  - [x] Microsoft Graph API integration
+  - [x] Authorization and token exchange
+  - [x] User profile retrieval
+- [x] Implement `oauth-dropbox.ts` - Dropbox OAuth
+  - [x] Dropbox API v2 integration
+  - [x] Authorization and token management
+  - [x] User account info retrieval
+- **Files created**: `oauth-session.ts`, `oauth-google-drive.ts`, `oauth-onedrive.ts`, `oauth-dropbox.ts`, `index.ts`
+- **Environment variables required**:
+  - Google Drive: `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`
+  - OneDrive: `ONEDRIVE_CLIENT_ID`, `ONEDRIVE_CLIENT_SECRET`
+  - Dropbox: `DROPBOX_CLIENT_ID`, `DROPBOX_CLIENT_SECRET`
 
 ### 2.3 tRPC API Routes ✅
 - [x] Extended `apps/dokploy/server/api/routers/destination.ts`
@@ -82,10 +100,17 @@
 - [x] `destination.testConnection` - Test connection (updated for multi-provider)
 - [x] `destination.getProviders` - List supported providers with metadata
 - [x] `destination.getProviderSchema` - Get config schema for provider
-- [ ] Create `apps/dokploy/server/api/routers/oauth.ts` (deferred with OAuth)
+- [x] Create `apps/dokploy/server/api/routers/oauth.ts`
+  - [x] `oauth.initiate` - Start OAuth flow, returns auth URL and session ID
+  - [x] `oauth.callback` - Handle OAuth callback, exchange code for tokens
+  - [x] `oauth.getSession` - Check OAuth session status
+  - [x] `oauth.getTokenData` - Get token data for creating destination
+  - [x] `oauth.deleteSession` - Clean up OAuth session
+  - [x] `oauth.getConfigStatus` - Check which OAuth providers are configured
 - [x] Authorization checks already in place (admin only)
 - [x] Input validation with Zod already in place
-- **Files modified**: `apps/dokploy/server/api/routers/destination.ts`
+- **Files created**: `apps/dokploy/server/api/routers/oauth.ts`
+- **Files modified**: `apps/dokploy/server/api/routers/destination.ts`, `apps/dokploy/server/api/root.ts` (added oauth router)
 
 ### 2.4 Backup Service Integration ✅
 - [x] Update `packages/server/src/utils/backups/postgres.ts`
@@ -193,8 +218,17 @@
 - **Note**: Edit mode determined by `destinationId` prop; form auto-populates with decrypted data
 - **Files modified**: `handle-destinations-v2.tsx` (edit support built-in from Phase 3.3)
 
-### 3.6 OAuth Flow UI (DEFERRED)
-- [ ] Create OAuth popup/redirect flow
+### 3.6 OAuth Flow UI ⏸️ (PARTIAL)
+- [x] Add OAuth providers to PROVIDER_INFO mapping
+  - [x] Google Drive: OAuth info, required fields
+  - [x] OneDrive: OAuth info, required fields
+  - [x] Dropbox: OAuth info, required fields
+- [x] Add OAuth provider selection in dropdown
+- [x] Add informational panels explaining OAuth requirements
+  - [x] OAuth authentication explanation
+  - [x] Environment variable requirements
+  - [x] Setup instructions
+- [ ] Create OAuth authorization button with popup window
 - [ ] Handle OAuth callback page
   - [ ] Display "Authorizing..." message
   - [ ] Close popup and notify parent window
@@ -204,8 +238,8 @@
   - [ ] Error handling for OAuth failures
 - [ ] Handle OAuth token expiration warnings
   - [ ] Show "Re-authorize" button if token expired
-- **Status**: Deferred to future work - requires OAuth service backend implementation
-- **Blocked by**: Phase 2.2 (OAuth Service) implementation
+- **Status**: OAuth backend complete (Phase 2.2). Basic provider info added to UI. Full OAuth flow UI pending.
+- **Files modified**: `handle-destinations-v2.tsx` (added OAuth provider info panels)
 
 ## Phase 4: Testing & Validation
 

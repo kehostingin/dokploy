@@ -80,6 +80,13 @@ const destinationSchema = z.object({
 	password: z.string().optional(),
 	password2: z.string().optional(),
 	filenameEncryption: z.string().optional(),
+	// OAuth fields
+	oauthSessionId: z.string().optional(),
+	token: z.string().optional(), // OAuth token JSON
+	rootFolderId: z.string().optional(), // Google Drive
+	teamDrive: z.string().optional(), // Google Drive
+	driveId: z.string().optional(), // OneDrive
+	driveType: z.string().optional(), // OneDrive
 	// Custom config
 	customConfig: z.string().optional(),
 	serverId: z.string().optional(),
@@ -115,6 +122,21 @@ const PROVIDER_INFO: Record<
 		icon: <ServerIcon className="size-4" />,
 		name: "WebDAV",
 		description: "Nextcloud, ownCloud, Sharepoint WebDAV",
+	},
+	"google-drive": {
+		icon: <Cloud className="size-4" />,
+		name: "Google Drive",
+		description: "Google Drive cloud storage (OAuth required)",
+	},
+	onedrive: {
+		icon: <Cloud className="size-4" />,
+		name: "OneDrive",
+		description: "Microsoft OneDrive cloud storage (OAuth required)",
+	},
+	dropbox: {
+		icon: <Cloud className="size-4" />,
+		name: "Dropbox",
+		description: "Dropbox cloud storage (OAuth required)",
 	},
 	local: {
 		icon: <HardDrive className="size-4" />,
@@ -171,6 +193,12 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 			password: "",
 			password2: "",
 			filenameEncryption: "standard",
+			oauthSessionId: "",
+			token: "",
+			rootFolderId: "",
+			teamDrive: "",
+			driveId: "",
+			driveType: "",
 			customConfig: "",
 			serverId: "",
 		},
@@ -907,6 +935,58 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 									)}
 								/>
 							</>
+						)}
+
+						{/* OAuth Providers */}
+						{(selectedProvider === "google-drive" ||
+							selectedProvider === "onedrive" ||
+							selectedProvider === "dropbox") && (
+							<div className="rounded-lg border p-4 bg-muted/50">
+								<div className="flex flex-col gap-3">
+									<div className="flex items-start gap-2">
+										<Cloud className="size-5 mt-0.5" />
+										<div>
+											<h4 className="font-medium">OAuth Authentication Required</h4>
+											<p className="text-sm text-muted-foreground mt-1">
+												This provider requires OAuth authentication. You'll be redirected to{" "}
+												{selectedProvider === "google-drive" && "Google"}
+												{selectedProvider === "onedrive" && "Microsoft"}
+												{selectedProvider === "dropbox" && "Dropbox"} to authorize access.
+											</p>
+										</div>
+									</div>
+									<div className="text-sm text-muted-foreground">
+										<p className="font-medium mb-2">Setup Requirements:</p>
+										<ul className="list-disc list-inside space-y-1 ml-2">
+											<li>
+												Configure OAuth credentials in environment variables
+											</li>
+											{selectedProvider === "google-drive" && (
+												<>
+													<li>GOOGLE_DRIVE_CLIENT_ID</li>
+													<li>GOOGLE_DRIVE_CLIENT_SECRET</li>
+												</>
+											)}
+											{selectedProvider === "onedrive" && (
+												<>
+													<li>ONEDRIVE_CLIENT_ID</li>
+													<li>ONEDRIVE_CLIENT_SECRET</li>
+												</>
+											)}
+											{selectedProvider === "dropbox" && (
+												<>
+													<li>DROPBOX_CLIENT_ID</li>
+													<li>DROPBOX_CLIENT_SECRET</li>
+												</>
+											)}
+										</ul>
+									</div>
+									<p className="text-xs text-muted-foreground mt-2">
+										Note: OAuth providers will be fully functional once environment variables are configured.
+										See documentation for setup instructions.
+									</p>
+								</div>
+							</div>
 						)}
 
 						{/* Custom rclone config */}
