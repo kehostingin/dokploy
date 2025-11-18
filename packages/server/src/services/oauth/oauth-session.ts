@@ -79,6 +79,23 @@ export const getOAuthSession = (
 };
 
 /**
+ * Get OAuth session by state parameter
+ */
+export const getOAuthSessionByState = (
+	state: string,
+): OAuthSession | undefined => {
+	cleanupExpiredSessions();
+
+	for (const session of sessions.values()) {
+		if (session.state === state && session.expiresAt >= new Date()) {
+			return session;
+		}
+	}
+
+	return undefined;
+};
+
+/**
  * Update OAuth session with token data
  */
 export const updateOAuthSession = (

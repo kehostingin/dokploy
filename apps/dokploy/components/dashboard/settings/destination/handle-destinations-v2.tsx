@@ -240,7 +240,7 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 			const top = window.screenY + (window.outerHeight - height) / 2;
 
 			const popup = window.open(
-				`${result.authUrl}&sessionId=${result.sessionId}`,
+				result.authUrl,
 				"OAuth Authorization",
 				`width=${width},height=${height},left=${left},top=${top}`,
 			);
@@ -266,6 +266,10 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 			if (event.origin !== window.location.origin) return;
 
 			if (event.data.type === "oauth-success") {
+				// Update session ID from callback (in case it wasn't set)
+				if (event.data.sessionId) {
+					setOauthSessionId(event.data.sessionId);
+				}
 				setOauthStatus("authorized");
 				setOauthUserInfo({
 					email: event.data.userEmail,

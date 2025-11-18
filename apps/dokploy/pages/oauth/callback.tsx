@@ -19,7 +19,7 @@ const OAuthCallbackPage = () => {
 
 	useEffect(() => {
 		const handleCallback = async () => {
-			const { code, state, sessionId } = router.query;
+			const { code, state } = router.query;
 
 			// Wait for router to be ready
 			if (!router.isReady) {
@@ -27,11 +27,11 @@ const OAuthCallbackPage = () => {
 				return;
 			}
 
-			// Check for required parameters
-			if (!code || !state || !sessionId) {
-				console.log("Missing query parameters:", { code: !!code, state: !!state, sessionId: !!sessionId });
+			// Check for required parameters (only code and state are needed)
+			if (!code || !state) {
+				console.log("Missing query parameters:", { code: !!code, state: !!state });
 				setStatus("error");
-				setErrorMessage("Missing required OAuth parameters. Please try again.");
+				setErrorMessage("Missing required OAuth parameters (code or state). Please try again.");
 				return;
 			}
 
@@ -42,13 +42,12 @@ const OAuthCallbackPage = () => {
 			}
 			hasRun.current = true;
 
-			console.log("Processing OAuth callback with sessionId:", sessionId);
+			console.log("Processing OAuth callback with state:", state);
 
 			try {
 				const result = await oauthCallback.mutateAsync({
 					code: code as string,
 					state: state as string,
-					sessionId: sessionId as string,
 				});
 
 				console.log("OAuth callback successful:", result);
@@ -64,7 +63,7 @@ const OAuthCallbackPage = () => {
 					window.opener.postMessage(
 						{
 							type: "oauth-success",
-							sessionId: sessionId as string,
+							sessionId: result.sessionId,
 							userEmail: result.userEmail,
 							userName: result.userName,
 						},
@@ -167,7 +166,6 @@ const OAuthCallbackPage = () => {
 								<div>Query params:</div>
 								<div>code: {router.query.code ? "present" : "missing"}</div>
 								<div>state: {router.query.state ? "present" : "missing"}</div>
-								<div>sessionId: {router.query.sessionId as string || "missing"}</div>
 							</div>
 						)}
 						{!window.opener && (

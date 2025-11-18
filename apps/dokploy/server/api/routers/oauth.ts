@@ -11,6 +11,7 @@ import {
 	getGoogleDriveAuthUrl,
 	getGoogleDriveUserInfo,
 	getOAuthSession,
+	getOAuthSessionByState,
 	getOneDriveAuthUrl,
 	getOneDriveUserInfo,
 	isDropboxOAuthConfigured,
@@ -98,7 +99,7 @@ export const oauthRouter = createTRPCRouter({
 	callback: adminProcedure
 		.input(
 			z.object({
-				sessionId: z.string(),
+				sessionId: z.string().optional(),
 				code: z.string(),
 				state: z.string(),
 			}),
@@ -106,8 +107,14 @@ export const oauthRouter = createTRPCRouter({
 		.mutation(async ({ input }) => {
 			const { sessionId, code, state } = input;
 
-			// Verify session exists
-			const session = getOAuthSession(sessionId);
+			// Get session by state parameter (this is what OAuth providers return)
+			let session = sessionId ? getOAuthSession(sessionId) : null;
+
+			// If no session found by ID, try looking up by state
+			if (!session) {
+				session = getOAuthSessionByState(state);
+			}
+
 			if (!session) {
 				throw new TRPCError({
 					code: "NOT_FOUND",
@@ -116,7 +123,7 @@ export const oauthRouter = createTRPCRouter({
 			}
 
 			// Verify state (CSRF protection)
-			if (!verifyOAuthState(sessionId, state)) {
+			if (session.state !== state) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
 					message: "Invalid OAuth state parameter",
@@ -152,7 +159,7 @@ export const oauthRouter = createTRPCRouter({
 				}
 
 				// Update session with token data
-				const updatedSession = updateOAuthSession(sessionId, {
+				const updatedSession = updateOAuthSession(session.sessionId, {
 					accessToken: tokenData.access_token,
 					refreshToken: tokenData.refresh_token,
 					expiresIn: tokenData.expires_in,
@@ -173,7 +180,7 @@ export const oauthRouter = createTRPCRouter({
 
 				return {
 					success: true,
-					sessionId,
+					sessionId: session.sessionId,
 					userEmail: updatedSession?.userEmail,
 					userName: updatedSession?.userName,
 				};
