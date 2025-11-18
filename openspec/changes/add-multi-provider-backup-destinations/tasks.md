@@ -179,13 +179,15 @@
   - [ ] Syntax highlighting (optional)
   - [ ] Validation before save
 
-### 3.5 Edit Destination Dialog
-- [ ] Create `apps/dokploy/components/dashboard/settings/destination/edit-destination.tsx`
-- [ ] Load existing destination data
-- [ ] Show provider-specific form (read-only provider type)
-- [ ] Allow updating config (e.g., password change)
-- [ ] Re-test connection after changes
-- [ ] Handle OAuth token refresh if expired
+### 3.5 Edit Destination Dialog ✅
+- [x] Edit functionality integrated into `handle-destinations-v2.tsx` (no separate component needed)
+- [x] Load existing destination data via `api.destination.one.useQuery`
+- [x] Show provider-specific form (provider type is read-only/disabled when editing)
+- [x] Allow updating config (e.g., password change, credentials)
+- [x] Re-test connection after changes (via "Test Connection" button in list page)
+- [ ] Handle OAuth token refresh if expired (deferred with OAuth implementation)
+- **Note**: Edit mode determined by `destinationId` prop; form auto-populates with decrypted data
+- **Files modified**: `handle-destinations-v2.tsx` (edit support built-in from Phase 3.3)
 
 ### 3.6 OAuth Flow UI
 - [ ] Create OAuth popup/redirect flow
@@ -201,13 +203,35 @@
 
 ## Phase 4: Testing & Validation
 
-### 4.1 Unit Tests
-- [ ] Test rclone config generation for each provider
-- [ ] Test provider validation logic
-- [ ] Test encryption/decryption of sensitive fields
-- [ ] Test OAuth session management
-- [ ] Test destination CRUD operations
-- [ ] Test backup upload routing logic
+### 4.1 Unit Tests ✅
+- [x] Test rclone config generation for each provider
+  - [x] S3 provider with all fields and optional fields
+  - [x] FTP provider with TLS support
+  - [x] SFTP provider with password and SSH key
+  - [x] Custom provider handling
+  - [x] Remote name handling with special characters
+  - [x] Error handling for missing/invalid fields
+- [x] Test provider validation logic
+  - [x] All provider metadata validation
+  - [x] OAuth vs non-OAuth categorization
+  - [x] Provider schema validation
+  - [x] Provider ID uniqueness
+- [x] Test encryption/decryption of sensitive fields
+  - [x] Basic encrypt/decrypt functionality
+  - [x] JSON data encryption
+  - [x] Sensitive credentials encryption
+  - [x] IV randomization (different ciphertext for same plaintext)
+  - [x] Special characters and unicode support
+  - [x] SSH private key format
+  - [x] Error handling for invalid ciphertext
+  - [x] Security properties (authenticated encryption, tamper detection)
+- [ ] Test OAuth session management (deferred with OAuth implementation)
+- [ ] Test destination CRUD operations (integration tests)
+- [ ] Test backup upload routing logic (integration tests)
+- **Files created**:
+  - `apps/dokploy/__test__/services/rclone/rclone-config.test.ts` (60 tests)
+  - `apps/dokploy/__test__/services/rclone/rclone-providers.test.ts` (25 tests)
+  - `apps/dokploy/__test__/utils/encryption.test.ts` (30+ tests)
 
 ### 4.2 Integration Tests
 - [ ] Test actual rclone commands against test backends
