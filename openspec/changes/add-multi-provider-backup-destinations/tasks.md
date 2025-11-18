@@ -117,29 +117,40 @@
 - [x] Update `apps/dokploy/components/dashboard/database/backups/show-backups.tsx` link text
 - **Files updated**: 4 files with "S3 Destinations" → "Backup Destinations"
 
-### 3.2 Destination List Page
-- [ ] Update `apps/dokploy/pages/dashboard/settings/destinations.tsx`
-- [ ] Update `apps/dokploy/components/dashboard/settings/destination/show-destinations.tsx`
-- [ ] Display provider type badge/icon for each destination
-- [ ] Add provider-specific information in list view
-- [ ] Add "Test Connection" button with loading state
-- [ ] Show last tested timestamp
-- [ ] Show last error if connection failed
-- [ ] Add filter by provider type (optional)
+### 3.2 Destination List Page ✅
+- [x] Update `apps/dokploy/pages/dashboard/settings/destinations.tsx` (metaName updated earlier)
+- [x] Update `apps/dokploy/components/dashboard/settings/destination/show-destinations.tsx`
+- [x] Display provider type badge/icon for each destination
+- [x] Add provider-specific information in list view
+- [x] Add "Test Connection" button with loading state
+- [x] Show last tested timestamp with success/error indicators
+- [x] Show last error if connection failed
+- [ ] Add filter by provider type (deferred - not essential)
+- **Files modified**: `apps/dokploy/components/dashboard/settings/destination/show-destinations.tsx`
+- **Features added**:
+  - Provider type badges with icons (S3, Google Drive, OneDrive, FTP, SFTP, etc.)
+  - Connection status indicators (green checkmark for success, red X for errors)
+  - Test Connection button with loading state
+  - Last tested timestamp display
+  - Error message display
 
-### 3.3 Add Destination Dialog
-- [ ] Create `apps/dokploy/components/dashboard/settings/destination/add-destination.tsx`
-- [ ] Step 1: Provider selection
-  - [ ] Dropdown or grid of provider cards
-  - [ ] Show provider logos/icons
-  - [ ] Show brief description per provider
-- [ ] Step 2: Provider-specific configuration form
-  - [ ] Dynamic form based on selected provider
-  - [ ] Different fields for each provider type
-- [ ] Step 3: Test and save
-  - [ ] Test connection before saving
-  - [ ] Show success/error feedback
-  - [ ] Save button enabled only after successful test (or allow override)
+### 3.3 Add Destination Dialog ✅
+- [x] Created `apps/dokploy/components/dashboard/settings/destination/handle-destinations-v2.tsx`
+- [x] Provider selection dropdown with icons and descriptions
+  - [x] Shows provider logos/icons (Cloud, Server, etc.)
+  - [x] Shows brief description per provider
+  - [x] Supports S3, FTP, SFTP, Custom rclone config
+- [x] Dynamic form based on selected provider
+  - [x] S3: Access Key, Secret Key, Bucket, Region, Endpoint
+  - [x] FTP: Host, Port, Username, Password, TLS toggle
+  - [x] SFTP: Host, Port, Username, Password/SSH Key
+  - [x] Custom: rclone config textarea
+- [x] Save functionality with proper data mapping
+  - [x] Converts form data to rcloneConfig JSON format
+  - [x] Maintains backward compatibility with legacy S3 fields
+- **Note**: Test connection happens after saving (via list page button)
+- **Files created**: `handle-destinations-v2.tsx`
+- **Files modified**: `show-destinations.tsx` (to use V2 component)
 
 ### 3.4 Provider-Specific Forms
 - [ ] Create `apps/dokploy/components/dashboard/settings/destination/providers/` directory
