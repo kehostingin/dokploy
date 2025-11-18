@@ -1,8 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+	CheckCircle2,
 	Cloud,
 	FileCode,
 	HardDrive,
+	Loader2,
 	PenBoxIcon,
 	PlusIcon,
 	ServerIcon,
@@ -158,6 +160,9 @@ const PROVIDER_INFO: Record<
 export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 	const [open, setOpen] = useState(false);
 	const [selectedProvider, setSelectedProvider] = useState<string>("s3");
+	const [oauthSessionId, setOauthSessionId] = useState<string>("");
+	const [oauthStatus, setOauthStatus] = useState<"idle" | "authorizing" | "authorized" | "error">("idle");
+	const [oauthUserInfo, setOauthUserInfo] = useState<{ email?: string; name?: string }>({});
 	const utils = api.useUtils();
 	const { data: isCloud } = api.settings.isCloud.useQuery();
 
@@ -169,6 +174,21 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 		{ destinationId: destinationId || "" },
 		{ enabled: !!destinationId, refetchOnWindowFocus: false },
 	);
+
+	// OAuth mutations and queries
+	const initiateOAuth = api.oauth.initiate.useMutation();
+	const getOAuthSession = api.oauth.getSession.useQuery(
+		{ sessionId: oauthSessionId },
+		{
+			enabled: !!oauthSessionId && oauthStatus === "authorizing",
+			refetchInterval: 2000, // Poll every 2 seconds
+		}
+	);
+	const getOAuthTokenData = api.oauth.getTokenData.useQuery(
+		{ sessionId: oauthSessionId },
+		{ enabled: false } // Manual trigger
+	);
+	const deleteOAuthSession = api.oauth.deleteSession.useMutation();
 
 	const form = useForm<Destination>({
 		defaultValues: {
@@ -204,6 +224,73 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 		},
 		resolver: zodResolver(destinationSchema),
 	});
+
+	// OAuth functions
+	const handleOAuthAuthorize = async () => {
+		try {
+			setOauthStatus("authorizing");
+			const result = await initiateOAuth.mutateAsync({
+				provider: selectedProvider as "google-drive" | "onedrive" | "dropbox",
+				destinationName: form.getValues("name"),
+			});
+
+			setOauthSessionId(result.sessionId);
+
+			// Open OAuth popup
+			const width = 600;
+			const height = 700;
+			const left = window.screenX + (window.outerWidth - width) / 2;
+			const top = window.screenY + (window.outerHeight - height) / 2;
+
+			const popup = window.open(
+				`${result.authUrl}&sessionId=${result.sessionId}`,
+				"OAuth Authorization",
+				`width=${width},height=${height},left=${left},top=${top}`
+			);
+
+			if (!popup) {
+				toast.error("Failed to open authorization popup. Please allow popups for this site.");
+				setOauthStatus("error");
+			}
+		} catch (error) {
+			console.error("OAuth initiation error:", error);
+			toast.error(error instanceof Error ? error.message : "Failed to start OAuth flow");
+			setOauthStatus("error");
+		}
+	};
+
+	// Listen for OAuth callback messages
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			if (event.origin !== window.location.origin) return;
+
+			if (event.data.type === "oauth-success") {
+				setOauthStatus("authorized");
+				setOauthUserInfo({
+					email: event.data.userEmail,
+					name: event.data.userName,
+				});
+				toast.success(`Authorized as ${event.data.userEmail || event.data.userName}`);
+			} else if (event.data.type === "oauth-error") {
+				setOauthStatus("error");
+				toast.error(event.data.error);
+			}
+		};
+
+		window.addEventListener("message", handleMessage);
+		return () => window.removeEventListener("message", handleMessage);
+	}, []);
+
+	// Monitor OAuth session status via polling
+	useEffect(() => {
+		if (getOAuthSession.data?.found && getOAuthSession.data.hasToken) {
+			setOauthStatus("authorized");
+			setOauthUserInfo({
+				email: getOAuthSession.data.userEmail,
+				name: getOAuthSession.data.userName,
+			});
+		}
+	}, [getOAuthSession.data]);
 
 	// Load destination data when editing
 	useEffect(() => {
@@ -343,6 +430,58 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 					rcloneConfig: JSON.stringify(rcloneConfig),
 					destinationId: destinationId || "",
 				});
+			} else if (
+				data.providerType === "google-drive" ||
+				data.providerType === "onedrive" ||
+				data.providerType === "dropbox"
+			) {
+				// OAuth providers - fetch token data from session
+				if (!oauthSessionId || oauthStatus !== "authorized") {
+					toast.error("Please authorize with the provider first");
+					return;
+				}
+
+				try {
+					const tokenData = await getOAuthTokenData.refetch();
+					if (!tokenData.data) {
+						toast.error("Failed to get OAuth token data");
+						return;
+					}
+
+					rcloneConfig = {
+						token: tokenData.data.tokenJson,
+					};
+
+					// Add provider-specific optional fields
+					if (data.providerType === "google-drive") {
+						if (data.rootFolderId) {
+							rcloneConfig.rootFolderId = data.rootFolderId;
+						}
+						if (data.teamDrive) {
+							rcloneConfig.teamDrive = data.teamDrive;
+						}
+					} else if (data.providerType === "onedrive") {
+						if (data.driveId) {
+							rcloneConfig.driveId = data.driveId;
+						}
+						if (data.driveType) {
+							rcloneConfig.driveType = data.driveType;
+						}
+					}
+
+					await mutateAsync({
+						name: data.name,
+						providerType: data.providerType,
+						rcloneConfig: JSON.stringify(rcloneConfig),
+						destinationId: destinationId || "",
+					});
+
+					// Clean up OAuth session after successful creation
+					await deleteOAuthSession.mutateAsync({ sessionId: oauthSessionId });
+				} catch (error) {
+					console.error("Failed to create OAuth destination:", error);
+					throw error;
+				}
 			} else if (data.providerType === "custom") {
 				await mutateAsync({
 					name: data.name,
@@ -355,6 +494,11 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 			toast.success(`Destination ${destinationId ? "Updated" : "Created"}`);
 			await utils.destination.all.invalidate();
 			setOpen(false);
+
+			// Reset OAuth state
+			setOauthSessionId("");
+			setOauthStatus("idle");
+			setOauthUserInfo({});
 		} catch (error) {
 			toast.error(
 				`Error ${destinationId ? "Updating" : "Creating"} destination`,
@@ -367,8 +511,21 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 	useEffect(() => {
 		if (watchedProviderType) {
 			setSelectedProvider(watchedProviderType);
+			// Reset OAuth state when provider changes
+			setOauthSessionId("");
+			setOauthStatus("idle");
+			setOauthUserInfo({});
 		}
 	}, [watchedProviderType]);
+
+	// Reset OAuth state when dialog closes
+	useEffect(() => {
+		if (!open) {
+			setOauthSessionId("");
+			setOauthStatus("idle");
+			setOauthUserInfo({});
+		}
+	}, [open]);
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -945,46 +1102,182 @@ export const HandleDestinationsV2 = ({ destinationId }: Props) => {
 								<div className="flex flex-col gap-3">
 									<div className="flex items-start gap-2">
 										<Cloud className="size-5 mt-0.5" />
-										<div>
-											<h4 className="font-medium">OAuth Authentication Required</h4>
+										<div className="flex-1">
+											<h4 className="font-medium">OAuth Authentication</h4>
 											<p className="text-sm text-muted-foreground mt-1">
-												This provider requires OAuth authentication. You'll be redirected to{" "}
-												{selectedProvider === "google-drive" && "Google"}
-												{selectedProvider === "onedrive" && "Microsoft"}
-												{selectedProvider === "dropbox" && "Dropbox"} to authorize access.
+												Authorize Dokploy to access your{" "}
+												{selectedProvider === "google-drive" && "Google Drive"}
+												{selectedProvider === "onedrive" && "OneDrive"}
+												{selectedProvider === "dropbox" && "Dropbox"} account.
 											</p>
 										</div>
 									</div>
-									<div className="text-sm text-muted-foreground">
-										<p className="font-medium mb-2">Setup Requirements:</p>
-										<ul className="list-disc list-inside space-y-1 ml-2">
-											<li>
-												Configure OAuth credentials in environment variables
-											</li>
+
+									{oauthStatus === "idle" && (
+										<>
+											<Button
+												type="button"
+												onClick={handleOAuthAuthorize}
+												disabled={!form.watch("name")}
+												className="w-full"
+											>
+												<Cloud className="size-4 mr-2" />
+												Authorize with{" "}
+												{selectedProvider === "google-drive" && "Google"}
+												{selectedProvider === "onedrive" && "Microsoft"}
+												{selectedProvider === "dropbox" && "Dropbox"}
+											</Button>
+											{!form.watch("name") && (
+												<p className="text-xs text-muted-foreground">
+													Please enter a destination name first
+												</p>
+											)}
+										</>
+									)}
+
+									{oauthStatus === "authorizing" && (
+										<div className="flex items-center gap-2 p-3 rounded-md bg-blue-500/10">
+											<Loader2 className="size-4 animate-spin text-blue-500" />
+											<span className="text-sm">
+												Waiting for authorization...
+											</span>
+										</div>
+									)}
+
+									{oauthStatus === "authorized" && (
+										<div className="flex items-center gap-2 p-3 rounded-md bg-green-500/10">
+											<CheckCircle2 className="size-4 text-green-500" />
+											<div className="flex-1">
+												<span className="text-sm font-medium">
+													Authorized successfully
+												</span>
+												{oauthUserInfo.name && (
+													<p className="text-xs text-muted-foreground">
+														{oauthUserInfo.name}
+														{oauthUserInfo.email && ` (${oauthUserInfo.email})`}
+													</p>
+												)}
+											</div>
+										</div>
+									)}
+
+									{oauthStatus === "error" && (
+										<div className="flex flex-col gap-2">
+											<div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10">
+												<span className="text-sm text-destructive">
+													Authorization failed
+												</span>
+											</div>
+											<Button
+												type="button"
+												variant="outline"
+												onClick={handleOAuthAuthorize}
+												disabled={!form.watch("name")}
+												className="w-full"
+											>
+												Try Again
+											</Button>
+										</div>
+									)}
+
+									{/* Provider-specific optional fields */}
+									{oauthStatus === "authorized" && (
+										<>
 											{selectedProvider === "google-drive" && (
 												<>
-													<li>GOOGLE_DRIVE_CLIENT_ID</li>
-													<li>GOOGLE_DRIVE_CLIENT_SECRET</li>
+													<FormField
+														control={form.control}
+														name="rootFolderId"
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Root Folder ID (Optional)</FormLabel>
+																<FormControl>
+																	<Input
+																		placeholder="1ABC...XYZ"
+																		{...field}
+																	/>
+																</FormControl>
+																<FormDescription>
+																	Limit access to a specific folder
+																</FormDescription>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+													<FormField
+														control={form.control}
+														name="teamDrive"
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Team Drive ID (Optional)</FormLabel>
+																<FormControl>
+																	<Input
+																		placeholder="0ABC...XYZ"
+																		{...field}
+																	/>
+																</FormControl>
+																<FormDescription>
+																	Use a Google Workspace Team Drive
+																</FormDescription>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
 												</>
 											)}
+
 											{selectedProvider === "onedrive" && (
 												<>
-													<li>ONEDRIVE_CLIENT_ID</li>
-													<li>ONEDRIVE_CLIENT_SECRET</li>
+													<FormField
+														control={form.control}
+														name="driveId"
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Drive ID (Optional)</FormLabel>
+																<FormControl>
+																	<Input
+																		placeholder="b!abc..."
+																		{...field}
+																	/>
+																</FormControl>
+																<FormDescription>
+																	Specify a particular drive
+																</FormDescription>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+													<FormField
+														control={form.control}
+														name="driveType"
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Drive Type (Optional)</FormLabel>
+																<FormControl>
+																	<Select
+																		onValueChange={field.onChange}
+																		value={field.value}
+																	>
+																		<SelectTrigger>
+																			<SelectValue placeholder="Select drive type" />
+																		</SelectTrigger>
+																		<SelectContent>
+																			<SelectItem value="personal">Personal</SelectItem>
+																			<SelectItem value="business">Business</SelectItem>
+																			<SelectItem value="documentLibrary">
+																				Document Library
+																			</SelectItem>
+																		</SelectContent>
+																	</Select>
+																</FormControl>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
 												</>
 											)}
-											{selectedProvider === "dropbox" && (
-												<>
-													<li>DROPBOX_CLIENT_ID</li>
-													<li>DROPBOX_CLIENT_SECRET</li>
-												</>
-											)}
-										</ul>
-									</div>
-									<p className="text-xs text-muted-foreground mt-2">
-										Note: OAuth providers will be fully functional once environment variables are configured.
-										See documentation for setup instructions.
-									</p>
+										</>
+									)}
 								</div>
 							</div>
 						)}

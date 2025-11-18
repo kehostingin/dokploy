@@ -130,7 +130,7 @@
 - **Files created**: `packages/server/src/services/backup/upload.ts`, `s3-upload.ts`
 - **Files modified**: `packages/server/src/utils/backups/utils.ts`, `postgres.ts`, `mysql.ts`, `mariadb.ts`, `mongo.ts`
 
-## Phase 3: Frontend UI
+## Phase 3: Frontend UI ✅ COMPLETED
 
 ### 3.1 Navigation Updates ✅
 - [x] Update `apps/dokploy/components/layouts/side.tsx`
@@ -218,28 +218,43 @@
 - **Note**: Edit mode determined by `destinationId` prop; form auto-populates with decrypted data
 - **Files modified**: `handle-destinations-v2.tsx` (edit support built-in from Phase 3.3)
 
-### 3.6 OAuth Flow UI ⏸️ (PARTIAL)
+### 3.6 OAuth Flow UI ✅
 - [x] Add OAuth providers to PROVIDER_INFO mapping
   - [x] Google Drive: OAuth info, required fields
   - [x] OneDrive: OAuth info, required fields
   - [x] Dropbox: OAuth info, required fields
 - [x] Add OAuth provider selection in dropdown
-- [x] Add informational panels explaining OAuth requirements
-  - [x] OAuth authentication explanation
-  - [x] Environment variable requirements
-  - [x] Setup instructions
-- [ ] Create OAuth authorization button with popup window
-- [ ] Handle OAuth callback page
-  - [ ] Display "Authorizing..." message
-  - [ ] Close popup and notify parent window
-- [ ] Show OAuth status in main window
-  - [ ] Polling for session status
-  - [ ] Success message with account info
-  - [ ] Error handling for OAuth failures
-- [ ] Handle OAuth token expiration warnings
-  - [ ] Show "Re-authorize" button if token expired
-- **Status**: OAuth backend complete (Phase 2.2). Basic provider info added to UI. Full OAuth flow UI pending.
-- **Files modified**: `handle-destinations-v2.tsx` (added OAuth provider info panels)
+- [x] Create OAuth authorization button with popup window
+  - [x] Open OAuth popup with proper dimensions and positioning
+  - [x] Pass session ID to callback URL
+  - [x] Disable button until destination name is entered
+- [x] Handle OAuth callback page
+  - [x] Display "Authorizing..." message
+  - [x] Exchange code for tokens via oauth.callback mutation
+  - [x] Close popup and notify parent window via postMessage
+  - [x] Redirect to destinations page if not in popup
+  - [x] Show success/error states
+- [x] Show OAuth status in main window
+  - [x] Session status polling (2-second interval)
+  - [x] Four states: idle, authorizing, authorized, error
+  - [x] Success message with account info (name/email)
+  - [x] Error handling with "Try Again" button
+- [x] Integrate OAuth token data with destination creation
+  - [x] Fetch token data from OAuth session
+  - [x] Include token in rcloneConfig
+  - [x] Support provider-specific optional fields (root folder, team drive, drive ID, drive type)
+  - [x] Clean up OAuth session after successful creation
+- [x] OAuth state management
+  - [x] Listen for postMessage events from callback window
+  - [x] Reset OAuth state on provider change
+  - [x] Reset OAuth state on dialog close
+- [ ] Handle OAuth token expiration warnings (future enhancement)
+  - [ ] Show "Re-authorize" button if token expired during edit
+- **Status**: Complete - Full interactive OAuth flow implemented
+- **Files created**:
+  - `apps/dokploy/pages/oauth/callback.tsx` (OAuth callback page)
+- **Files modified**:
+  - `apps/dokploy/components/dashboard/settings/destination/handle-destinations-v2.tsx` (OAuth UI and integration)
 
 ## Phase 4: Testing & Validation
 
