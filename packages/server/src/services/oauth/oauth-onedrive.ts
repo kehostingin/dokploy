@@ -56,7 +56,7 @@ export const getOneDriveOAuthConfig = (): OneDriveOAuthConfig => {
 	const clientSecret = process.env.ONEDRIVE_CLIENT_SECRET;
 	const redirectUri =
 		process.env.ONEDRIVE_REDIRECT_URI ||
-		`${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/callback/onedrive`;
+		`${process.env.NEXT_PUBLIC_APP_URL}/oauth/callback`;
 
 	if (!clientId || !clientSecret) {
 		throw new Error(

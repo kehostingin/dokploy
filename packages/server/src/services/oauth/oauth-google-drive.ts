@@ -55,7 +55,7 @@ export const getGoogleDriveOAuthConfig = (): GoogleDriveOAuthConfig => {
 	const clientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET;
 	const redirectUri =
 		process.env.GOOGLE_DRIVE_REDIRECT_URI ||
-		`${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/callback/google-drive`;
+		`${process.env.NEXT_PUBLIC_APP_URL}/oauth/callback`;
 
 	if (!clientId || !clientSecret) {
 		throw new Error(

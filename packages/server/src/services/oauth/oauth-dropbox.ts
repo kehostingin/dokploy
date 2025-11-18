@@ -52,7 +52,7 @@ export const getDropboxOAuthConfig = (): DropboxOAuthConfig => {
 	const clientSecret = process.env.DROPBOX_CLIENT_SECRET;
 	const redirectUri =
 		process.env.DROPBOX_REDIRECT_URI ||
-		`${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/callback/dropbox`;
+		`${process.env.NEXT_PUBLIC_APP_URL}/oauth/callback`;
 
 	if (!clientId || !clientSecret) {
 		throw new Error(
