@@ -61,6 +61,8 @@
 			]
 		},
 		"onlyBuiltDependencies": [
+			"@prisma/client",
+			"@prisma/engines",
 			"@scarf/scarf",
 			"@tree-sitter-grammars/tree-sitter-yaml",
 			"bcrypt",
@@ -70,6 +72,7 @@
 			"esbuild",
 			"msgpackr-extract",
 			"node-pty",
+			"prisma",
 			"protobufjs",
 			"sharp",
 			"ssh2",
