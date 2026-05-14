@@ -270,17 +270,6 @@ const Register = ({ isCloud }: Props) => {
 										</Link>
 									</div>
 								)}
-
-								<div className="mt-4 text-center text-sm flex flex-row justify-center gap-2  text-muted-foreground">
-									Need help?
-									<Link
-										className="underline"
-										href="https://dokploy.com"
-										target="_blank"
-									>
-										Contact us
-									</Link>
-								</div>
 							</div>
 						</CardContent>
 					</div>
