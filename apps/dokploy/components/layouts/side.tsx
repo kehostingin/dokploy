@@ -419,7 +419,7 @@ const MENU: Menu = {
 			url: "/dashboard/settings/license",
 			icon: Key,
 			// Only enabled for owners
-			isEnabled: ({ auth }) => !!(auth?.role === "owner"),
+			isEnabled: () => false,
 		},
 		{
 			isSingle: true,
@@ -435,7 +435,7 @@ const MENU: Menu = {
 			url: "/dashboard/settings/whitelabeling",
 			icon: Palette,
 			// Only enabled for owners in non-cloud environments (enterprise)
-			isEnabled: ({ auth, isCloud }) => !!(auth?.role === "owner" && !isCloud),
+			isEnabled: () => false,
 		},
 	],
 
