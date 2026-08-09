@@ -67,15 +67,24 @@ const { handler, api } = betterAuth({
 		},
 	},
 	appName: "Dokploy",
+	baseURL: process.env.BETTER_AUTH_URL,
 	socialProviders: {
-		github: {
-			clientId: process.env.GITHUB_CLIENT_ID as string,
-			clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-		},
-		google: {
-			clientId: process.env.GOOGLE_CLIENT_ID as string,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-		},
+		...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+			? {
+					github: {
+						clientId: process.env.GITHUB_CLIENT_ID,
+						clientSecret: process.env.GITHUB_CLIENT_SECRET,
+					},
+				}
+			: {}),
+		...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+			? {
+					google: {
+						clientId: process.env.GOOGLE_CLIENT_ID,
+						clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+					},
+				}
+			: {}),
 	},
 	logger: {
 		disabled: process.env.NODE_ENV === "production",
@@ -93,12 +102,14 @@ const { handler, api } = betterAuth({
 			const devOrigins =
 				process.env.NODE_ENV === "development"
 					? [
-							"http://localhost:3000",
+							`http://localhost:${process.env.PORT || 3000}`,
 							"https://absolutely-handy-falcon.ngrok-free.app",
 						]
 					: [];
 			return [
-				...(settings?.serverIp ? [`http://${settings?.serverIp}:3000`] : []),
+				...(settings?.serverIp
+					? [`http://${settings.serverIp}:${process.env.PORT || 3000}`]
+					: []),
 				...(settings?.host ? [`https://${settings?.host}`] : []),
 				...devOrigins,
 				...trustedOrigins,

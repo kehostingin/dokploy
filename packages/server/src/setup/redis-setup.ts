@@ -5,6 +5,17 @@ import { pullImage } from "../utils/docker/utils";
 export const initializeRedis = async () => {
 	const imageName = "redis:7";
 	const containerName = "dokploy-redis";
+	const publishedPort = Number.parseInt(
+		process.env.DOKPLOY_REDIS_PORT ?? "6379",
+		10,
+	);
+	if (
+		!Number.isInteger(publishedPort) ||
+		publishedPort < 1 ||
+		publishedPort > 65535
+	) {
+		throw new Error("DOKPLOY_REDIS_PORT must be a valid TCP port");
+	}
 
 	const settings: CreateServiceOptions = {
 		Name: containerName,
@@ -34,7 +45,7 @@ export const initializeRedis = async () => {
 				Ports: [
 					{
 						TargetPort: 6379,
-						PublishedPort: 6379,
+						PublishedPort: publishedPort,
 						Protocol: "tcp",
 						PublishMode: "host",
 					},

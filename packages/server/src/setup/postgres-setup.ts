@@ -4,6 +4,17 @@ import { pullImage } from "../utils/docker/utils";
 export const initializePostgres = async () => {
 	const imageName = "postgres:16";
 	const containerName = "dokploy-postgres";
+	const publishedPort = Number.parseInt(
+		process.env.DOKPLOY_POSTGRES_PORT ?? "5432",
+		10,
+	);
+	if (
+		!Number.isInteger(publishedPort) ||
+		publishedPort < 1 ||
+		publishedPort > 65535
+	) {
+		throw new Error("DOKPLOY_POSTGRES_PORT must be a valid TCP port");
+	}
 	const settings: CreateServiceOptions = {
 		Name: containerName,
 		TaskTemplate: {
@@ -37,7 +48,7 @@ export const initializePostgres = async () => {
 				Ports: [
 					{
 						TargetPort: 5432,
-						PublishedPort: 5432,
+						PublishedPort: publishedPort,
 						Protocol: "tcp",
 						PublishMode: "host",
 					},
