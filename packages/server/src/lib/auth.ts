@@ -31,10 +31,94 @@ import { getPublicIpWithFallback } from "../wss/utils";
 import { ac, adminRole, memberRole, ownerRole } from "./access-control";
 import { betterAuthSecret } from "./auth-secret";
 
-const resolveTrustedOrigins = async () => {
-	try {
-		if (IS_CLOUD) {
-			return await getTrustedOrigins();
+const { handler, api } = betterAuth({
+	database: drizzleAdapter(db, {
+		provider: "pg",
+		schema: schema,
+	}),
+	disabledPaths: [
+		"/sso/register",
+		"/organization/create",
+		"/organization/update",
+		"/organization/delete",
+		...(!IS_CLOUD ? ["/verify-email"] : []),
+	],
+	secret: betterAuthSecret,
+	...(!IS_CLOUD
+		? {
+				advanced: {
+					useSecureCookies: false,
+					defaultCookieAttributes: {
+						sameSite: "lax",
+						secure: false,
+						httpOnly: true,
+						path: "/",
+					},
+				},
+			}
+		: {}),
+
+	account: {
+		accountLinking: {
+			enabled: true,
+			async trustedProviders() {
+				const fromDb = await getTrustedProviders();
+				return ["github", "google", ...fromDb];
+			},
+			allowDifferentEmails: true,
+		},
+	},
+	appName: "Dokploy",
+	baseURL: process.env.BETTER_AUTH_URL,
+	socialProviders: {
+		...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+			? {
+					github: {
+						clientId: process.env.GITHUB_CLIENT_ID,
+						clientSecret: process.env.GITHUB_CLIENT_SECRET,
+					},
+				}
+			: {}),
+		...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+			? {
+					google: {
+						clientId: process.env.GOOGLE_CLIENT_ID,
+						clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+					},
+				}
+			: {}),
+	},
+	logger: {
+		disabled: process.env.NODE_ENV === "production",
+	},
+	async trustedOrigins() {
+		try {
+			if (IS_CLOUD) {
+				return await getTrustedOrigins();
+			}
+			const [trustedOrigins, settings] = await Promise.all([
+				getTrustedOrigins(),
+				getWebServerSettings(),
+			]);
+			if (!settings) return [];
+			const devOrigins =
+				process.env.NODE_ENV === "development"
+					? [
+							`http://localhost:${process.env.PORT || 3000}`,
+							"https://absolutely-handy-falcon.ngrok-free.app",
+						]
+					: [];
+			return [
+				...(settings?.serverIp
+					? [`http://${settings.serverIp}:${process.env.PORT || 3000}`]
+					: []),
+				...(settings?.host ? [`https://${settings?.host}`] : []),
+				...devOrigins,
+				...trustedOrigins,
+			];
+		} catch (error) {
+			console.error("Failed to resolve trusted origins:", error);
+			return [];
 		}
 		const [trustedOrigins, settings] = await Promise.all([
 			getTrustedOrigins(),

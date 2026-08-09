@@ -1,11 +1,12 @@
 import type { CreateServiceOptions } from "dockerode";
 import { docker } from "../constants";
 import { pullImage } from "../utils/docker/utils";
-export const initializePostgres = async () => {
-	const imageName = "postgres:16";
-	const containerName = "dokploy-postgres";
+
+export const initializeRedis = async () => {
+	const imageName = "redis:7";
+	const containerName = "dokploy-redis";
 	const publishedPort = Number.parseInt(
-		process.env.DOKPLOY_POSTGRES_PORT ?? "5432",
+		process.env.DOKPLOY_REDIS_PORT ?? "6379",
 		10,
 	);
 	if (
@@ -13,23 +14,19 @@ export const initializePostgres = async () => {
 		publishedPort < 1 ||
 		publishedPort > 65535
 	) {
-		throw new Error("DOKPLOY_POSTGRES_PORT must be a valid TCP port");
+		throw new Error("DOKPLOY_REDIS_PORT must be a valid TCP port");
 	}
+
 	const settings: CreateServiceOptions = {
 		Name: containerName,
 		TaskTemplate: {
 			ContainerSpec: {
 				Image: imageName,
-				Env: [
-					"POSTGRES_USER=dokploy",
-					"POSTGRES_DB=dokploy",
-					"POSTGRES_PASSWORD=amukds4wi9001583845717ad2",
-				],
 				Mounts: [
 					{
 						Type: "volume",
-						Source: "dokploy-postgres",
-						Target: "/var/lib/postgresql/data",
+						Source: "dokploy-redis",
+						Target: "/data",
 					},
 				],
 			},
@@ -47,7 +44,7 @@ export const initializePostgres = async () => {
 			EndpointSpec: {
 				Ports: [
 					{
-						TargetPort: 5432,
+						TargetPort: 6379,
 						PublishedPort: publishedPort,
 						Protocol: "tcp",
 						PublishMode: "host",
@@ -65,7 +62,7 @@ export const initializePostgres = async () => {
 			version: Number.parseInt(inspect.Version.Index),
 			...settings,
 		});
-		console.log("Postgres Started ✅");
+		console.log("Redis Started ✅");
 	} catch (_) {
 		try {
 			await docker.createService(settings);
@@ -73,8 +70,8 @@ export const initializePostgres = async () => {
 			if (error?.statusCode !== 409) {
 				throw error;
 			}
-			console.log("Postgres service already exists, continuing...");
+			console.log("Redis service already exists, continuing...");
 		}
-		console.log("Postgres Not Found: Starting ✅");
+		console.log("Redis Not Found: Starting ✅");
 	}
 };
