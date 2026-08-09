@@ -10,8 +10,8 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { type ReactElement, useState } from "react";
-import superjson from "superjson";
 import { toast } from "sonner";
+import superjson from "superjson";
 import { ShowEnvironment } from "@/components/dashboard/application/environment/show-environment";
 import { ShowDockerLogs } from "@/components/dashboard/application/logs/show";
 import { DeleteService } from "@/components/dashboard/compose/delete-service";
@@ -140,7 +140,7 @@ const MySql = (
 														</Label>
 													</TooltipTrigger>
 													<TooltipContent
-														className="z-[999] w-[300px]"
+														className="z-999 w-[300px]"
 														align="start"
 														side="top"
 													>
@@ -199,7 +199,7 @@ const MySql = (
 											router.push(newPath, undefined, { shallow: true });
 										}}
 									>
-										<div className="flex flex-row items-center justify-between w-full gap-4 overflow-x-scroll">
+										<div className="flex flex-row items-center justify-between w-full gap-4 overflow-x-auto">
 											<TabsList
 												className={cn(
 													"md:grid md:w-fit max-md:overflow-y-scroll justify-start ",
@@ -276,6 +276,7 @@ const MySql = (
 													<ShowDockerLogs
 														serverId={data?.serverId || ""}
 														appName={data?.appName || ""}
+														serviceId={data?.mysqlId}
 													/>
 												</div>
 											</TabsContent>

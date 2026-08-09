@@ -32,8 +32,8 @@ export const OnboardingLayout = ({ children }: Props) => {
 					</blockquote>
 				</div>
 			</div>
-			<div className="w-full">
-				<div className="flex w-full flex-col justify-center space-y-6 max-w-lg mx-auto">
+			<div className="flex min-h-svh w-full flex-col">
+				<div className="flex w-full flex-1 flex-col justify-center space-y-6 max-w-lg mx-auto py-8">
 					{children}
 				</div>
 			</div>
