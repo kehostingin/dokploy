@@ -1058,31 +1058,39 @@ export default function Page({ children }: Props) {
 															</CollapsibleTrigger>
 															<CollapsibleContent>
 																<SidebarMenuSub>
-																	{item.items?.map((subItem) => (
-																		<SidebarMenuSubItem key={subItem.title}>
-																			<SidebarMenuSubButton
-																				asChild
-																				className={cn(isActive && "bg-border")}
-																			>
-																				<Link
-																					href={subItem.url}
-																					className="flex w-full items-center"
+																	{item.items?.map((subItem) => {
+																		const isSubItemActive = isActiveRoute({
+																			itemUrl: subItem.url,
+																			pathname,
+																		});
+
+																		return (
+																			<SidebarMenuSubItem key={subItem.title}>
+																				<SidebarMenuSubButton
+																					asChild
+																					isActive={isSubItemActive}
 																				>
-																					{subItem.icon && (
-																						<span className="mr-2">
-																							<subItem.icon
-																								className={cn(
-																									"h-4 w-4 text-muted-foreground",
-																									isActive && "text-primary",
-																								)}
-																							/>
-																						</span>
-																					)}
-																					<span>{subItem.title}</span>
-																				</Link>
-																			</SidebarMenuSubButton>
-																		</SidebarMenuSubItem>
-																	))}
+																					<Link
+																						href={subItem.url}
+																						className="flex w-full items-center"
+																					>
+																						{subItem.icon && (
+																							<span className="mr-2">
+																								<subItem.icon
+																									className={cn(
+																										"h-4 w-4 text-muted-foreground",
+																										isSubItemActive &&
+																											"text-primary",
+																									)}
+																								/>
+																							</span>
+																						)}
+																						<span>{subItem.title}</span>
+																					</Link>
+																				</SidebarMenuSubButton>
+																			</SidebarMenuSubItem>
+																		);
+																	})}
 																</SidebarMenuSub>
 															</CollapsibleContent>
 														</>
@@ -1159,31 +1167,39 @@ export default function Page({ children }: Props) {
 															</CollapsibleTrigger>
 															<CollapsibleContent>
 																<SidebarMenuSub>
-																	{item.items?.map((subItem) => (
-																		<SidebarMenuSubItem key={subItem.title}>
-																			<SidebarMenuSubButton
-																				asChild
-																				className={cn(isActive && "bg-border")}
-																			>
-																				<Link
-																					href={subItem.url}
-																					className="flex w-full items-center"
+																	{item.items?.map((subItem) => {
+																		const isSubItemActive = isActiveRoute({
+																			itemUrl: subItem.url,
+																			pathname,
+																		});
+
+																		return (
+																			<SidebarMenuSubItem key={subItem.title}>
+																				<SidebarMenuSubButton
+																					asChild
+																					isActive={isSubItemActive}
 																				>
-																					{subItem.icon && (
-																						<span className="mr-2">
-																							<subItem.icon
-																								className={cn(
-																									"h-4 w-4 text-muted-foreground",
-																									isActive && "text-primary",
-																								)}
-																							/>
-																						</span>
-																					)}
-																					<span>{subItem.title}</span>
-																				</Link>
-																			</SidebarMenuSubButton>
-																		</SidebarMenuSubItem>
-																	))}
+																					<Link
+																						href={subItem.url}
+																						className="flex w-full items-center"
+																					>
+																						{subItem.icon && (
+																							<span className="mr-2">
+																								<subItem.icon
+																									className={cn(
+																										"h-4 w-4 text-muted-foreground",
+																										isSubItemActive &&
+																											"text-primary",
+																									)}
+																								/>
+																							</span>
+																						)}
+																						<span>{subItem.title}</span>
+																					</Link>
+																				</SidebarMenuSubButton>
+																			</SidebarMenuSubItem>
+																		);
+																	})}
 																</SidebarMenuSub>
 															</CollapsibleContent>
 														</>
