@@ -515,7 +515,7 @@ export const serverRouter = createTRPCRouter({
 		}
 		return {
 			time: new Date(),
-			timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+			timezone: process.env.TZ || "Asia/Jakarta",
 		};
 	}),
 	getServerMetrics: withPermission("monitoring", "read")
