@@ -10,6 +10,7 @@ const nextConfig = {
 		ignoreBuildErrors: true,
 	},
 	transpilePackages: ["@dokploy/server"],
+	allowedDevOrigins: ['100.87.57.87'],
 	async headers() {
 		return [
 			{
